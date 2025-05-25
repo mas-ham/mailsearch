@@ -1,0 +1,261 @@
+import os
+import re
+
+from flask import Flask, render_template, redirect, url_for, request
+from flask_wtf import FlaskForm
+from wtforms import Form, StringField, DateField, RadioField, BooleanField, FieldList, FormField, HiddenField, SubmitField
+
+from common import const, sql_shared_service
+from mailsearch import search_message, search_settings, models
+
+
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+bin_dir = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+
+# app = Flask(__name__, template_folder=os.path.join(bin_dir, 'slacksearch'), static_folder=os.path.join(bin_dir, 'slacksearch', 'static'))
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'mysecret'
+
+class CheckboxItemForm(Form):
+    """
+    チェックボックス用Form
+    """
+    checked = BooleanField()
+    label = StringField()
+    item_id = HiddenField()
+
+
+class MailSearchForm(FlaskForm):
+    """
+    検索画面用Form
+    """
+    search_val = StringField(label='検索文字列')
+    search_type = RadioField('search_type_and', choices=[
+        ('01', 'AND検索'), ('02', 'OR検索')
+    ])
+    is_target_title = BooleanField(label='件名')
+    is_target_body = BooleanField(label='本文')
+    is_target_receive = BooleanField(label='受信メール')
+    is_target_send = BooleanField(label='送信メール')
+    search_from_date = DateField(label='期間')
+    search_to_date = DateField(label='')
+
+    to_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
+    sender_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
+    folder_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
+
+    search_button = SubmitField('検索', render_kw={'style': 'width: 7em; height: 3em'})
+
+
+class MailSearchResultForm(FlaskForm):
+    """
+    検索結果画面用Form
+    """
+    search_val = HiddenField()
+    data_count = StringField()
+    channel_type = HiddenField()
+    channel_name = HiddenField()
+    post_date = HiddenField()
+
+
+class MailSearchDetailForm(FlaskForm):
+    """
+    詳細画面用Form
+    """
+    search_val = HiddenField()
+    send_date = StringField('送信日')
+    mail_from = StringField('FROM')
+    mail_to = StringField('TO')
+    mail_xx = StringField('CC')
+    title = StringField('件名')
+    body = StringField('本文')
+
+
+class SettingsForm(FlaskForm):
+    """
+    検索設定画面Form
+    """
+    regist_button = SubmitField('登録', render_kw={'style': 'width: 7em; height: 3em'})
+
+
+@app.route('/index')
+def index():
+    """
+    初期表示
+
+    Returns:
+
+    """
+
+    form = MailSearchForm()
+    # 検索タイプ
+    form.search_type.data = '01'
+    # 件名/本文
+    form.is_target_title.data = True
+    form.is_target_body.data = True
+    # 検索場所
+    form.is_target_receive.data = True
+    # 差出人
+    sender_list = [
+        {'email_address': 'xxx1@xxx.com', 'display_name': 'ユーザー1', 'checked': True},
+        {'email_address': 'xxx2@xxx.com', 'display_name': 'ユーザー2', 'checked': True},
+        {'email_address': 'xxx3@xxx.com', 'display_name': 'ユーザー3', 'checked': False},
+        {'email_address': 'xxx4@xxx.com', 'display_name': 'ユーザー4', 'checked': True},
+        {'email_address': 'xxx5@xxx.com', 'display_name': 'ユーザー5', 'checked': False},
+        {'email_address': 'xxx6@xxx.com', 'display_name': 'ユーザー6', 'checked': False},
+    ]
+    for data in sender_list:
+        entry = form.sender_list.append_entry()
+        entry.label.data = data['display_name']
+        entry.item_id.data = data['email_address']
+        if data['checked']:
+            entry.checked.data = True
+    # 宛先
+    to_list = [
+        {'email_address': 'xxx1@xxx.com', 'display_name': 'ユーザー1', 'checked': False},
+        {'email_address': 'xxx2@xxx.com', 'display_name': 'ユーザー2', 'checked': False},
+        {'email_address': 'xxx3@xxx.com', 'display_name': 'ユーザー3', 'checked': False},
+        {'email_address': 'xxx4@xxx.com', 'display_name': 'ユーザー4', 'checked': False},
+        {'email_address': 'xxx5@xxx.com', 'display_name': 'ユーザー5', 'checked': False},
+        {'email_address': 'xxx6@xxx.com', 'display_name': 'ユーザー6', 'checked': False},
+    ]
+    for data in to_list:
+        entry = form.to_list.append_entry()
+        entry.label.data = data['display_name']
+        entry.item_id.data = data['email_address']
+        if data['checked']:
+            entry.checked.data = True
+
+    # 受信フォルダ
+    folder_list = [
+        {'entry_id': '1111', 'store_id': 'A111', 'display_name': 'フォルダー1', 'checked': False},
+        {'entry_id': '2222', 'store_id': 'A222', 'display_name': 'フォルダー2', 'checked': False},
+    ]
+    for data in folder_list:
+        entry = form.folder_list.append_entry()
+        entry.label.data = data['display_name']
+        entry.item_id.data = data['entry_id'] + ',' + data['store_id']
+        if data['checked']:
+            entry.checked.data = True
+
+    return render_template('index.html', form = form)
+
+
+@app.route('/search', methods=['POST'])
+def search():
+    """
+    検索
+
+    Returns:
+
+    """
+    form = MailSearchForm(request.form)
+    model = _convert_search_model(form)
+    result_list = search_message.search(model)
+    print(result_list)
+
+    result_form = MailSearchResultForm()
+    result_form.search_val = form.search_val
+    result_form.data_count.data = f'{len(result_list):,}'
+
+    return render_template('result.html', form=result_form, result_list=result_list)
+
+
+# @app.route('/detail', methods=['POST'])
+# def detail():
+#     """
+#     詳細
+#
+#     Returns:
+#
+#     """
+#     form = SlackSearchResultForm(request.form)
+#     model = _convert_detail_model(form)
+#     result = search_message.get_detail(root_dir, model)
+#
+#     # アイコンを設定
+#     for record in result.result_list:
+#         record['reply_icon'] = url_for('static', filename=f'icon/{record["reply_name"]}.jpg')
+#
+#     detail_form = SlackSearchDetailForm()
+#     detail_form.post_date.data = result.post_date
+#     detail_form.post_icon.data = url_for('static', filename=f'icon/{result.post_name}.jpg')
+#     detail_form.post_name.data = result.post_name
+#     detail_form.post_message.data = result.post_message
+#
+#     return render_template('detail.html', form=detail_form, result_list=result.result_list)
+
+
+@app.route('/settings')
+def index_settings():
+    form = SettingsForm()
+
+    with sql_shared_service.get_connection(root_dir) as conn:
+        folder_list = search_settings.get_folder_list(conn)
+
+    return render_template('indexSettings.html', form=form, folder_list=folder_list)
+
+
+@app.route('/registSettings', methods=['POST'])
+def regist_settings():
+    """
+    検索設定登録
+
+    Returns:
+
+    """
+    is_target_selected = request.form.getlist('is_target')
+
+    # 登録
+    with sql_shared_service.get_connection(root_dir) as conn:
+        search_settings.regist(conn, is_target_selected)
+
+    return redirect(url_for('index_settings'))
+
+
+def _convert_search_model(form: MailSearchForm) -> models.MailSearchModel:
+    """
+    検索用モデルへマッピング
+
+    Args:
+        form:
+
+    Returns:
+
+    """
+    return models.MailSearchModel(
+        form.search_val.data,
+        re.split(r'[ 　]+', form.search_val.data) if form.search_val.data else [],
+        form.search_type.data,
+        form.is_target_title.data,
+        form.is_target_body.data,
+        form.search_from_date.data,
+        form.search_to_date.data,
+        form.is_target_receive.data,
+        form.is_target_send.data,
+        [entry.item_id.data for entry in form.to_list if entry.checked.data],
+        [entry.item_id.data for entry in form.sender_list if entry.checked.data],
+        [entry.item_id.data for entry in form.folder_list if entry.checked.data],
+    )
+
+# def _convert_detail_model(form: SlackSearchResultForm) -> models.SlackDetailModel:
+#     """
+#     詳細用モデルへマッピング
+#
+#     Args:
+#         form:
+#
+#     Returns:
+#
+#     """
+#     return models.SlackDetailModel(
+#         form.channel_type.data,
+#         form.channel_name.data,
+#         form.post_date.data,
+#         form.search_val.data,
+#         re.split(r'[ 　]+', form.search_val.data),
+#     )
+
+
+if __name__ == "__main__":
+    app.run(host='127.0.0.1', port=5100, debug=True)

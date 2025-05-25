@@ -1,0 +1,54 @@
+<!--
+    メール検索：設定画面
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Mail Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/slack_app.css') }}" type="text/css">
+
+    <script>
+        $(function(){
+        });
+
+    </script>
+</head>
+<body>
+    <form id="form" name="form" action="/registSettings" method="POST">
+        {{ form.hidden_tag() }}
+        <h1>メール検索設定</h1>
+        <h2>取込み対象フォルダ</h2>
+        <table border="1">
+            <tr>
+                <th width="30px">
+                    対象
+                </th>
+                <th width="800px">
+                    フォルダー
+                </th>
+            </tr>
+            {% for record in folder_list %}
+                <tr>
+                    <td>
+                        <input type="checkbox" id="is_target_{{ record.folder_id }}" name="is_target" value="{{ record.folder_id }}" {{ record.checked }} />
+                    </td>
+                    <td>
+                        {{ record.folder_path }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <table>
+            <tr>
+                <td>
+                    {{ form.regist_button }}
+                </td>
+            </tr>
+        </table>
+        <br>
+    </form>
+</body>
+</html>

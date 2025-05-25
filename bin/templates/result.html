@@ -1,0 +1,78 @@
+<!--
+    メール検索：結果画面
+-->
+<!DOCTYPE html>
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<head>
+    <title>Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mailsearch.css') }}" type="text/css">
+
+    <script>
+        // 詳細画面を開く
+        function openDetail(channel_type, channel_name, post_date) {
+            $('#channel_type').val(channel_type);
+            $('#channel_name').val(channel_name);
+            $('#post_date').val(post_date);
+            $('#form').submit()
+        }
+
+        $(function(){
+        });
+
+    </script>
+</head>
+<body>
+    <h1>検索結果</h1>
+    <p>
+        {{ form.data_count.data }}&nbsp;件
+    </p>
+    <table border="1" width="98%">
+        <tr>
+            <th width="5%">
+                詳細
+            </th>
+            <th width="7%">
+                受信ボックス
+            </th>
+            <th width="10%">
+                差出人
+            </th>
+            <th width="12%">
+                送信日時
+            </th>
+            <th width="66%">
+                件名
+            </th>
+            <th style="display:none">
+                entry_id
+            </th>
+        </tr>
+        {% for record in result_list %}
+            <tr>
+                <td>
+                    <button onclick="javascript: openDetail('{{ record.channel_type }}', '{{ record.channel_name }}', '{{ record.post_date }}')">詳細</button>
+                </td>
+                <td>
+                    {{ record.folder_path }}
+                </td>
+                <td>
+                    {{ record.sender }}
+                </td>
+                <td>
+                    {{ record.received }}
+                </td>
+                <td>
+                    <div style="white-space:pre-wrap; word-break:break-all">{{ record.subject|safe }}</div>
+                </td>
+                <td style="display:none">
+                    {{ record.entry_id }}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+    <form id="form" name="form" action="/detail" method="post" target="_blank" >
+        {{ form.hidden_tag() }}
+    </form>
+</body>
+</html>

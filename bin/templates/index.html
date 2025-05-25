@@ -1,0 +1,182 @@
+<!--
+    メール検索：検索画面
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Slack Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mailsearch.css') }}" type="text/css">
+
+    <script>
+        $(function(){
+            $('#poster_all_sel').click(function() {
+                $('input[name^="poster_list"]').prop('checked', true);
+                return false;
+            });
+
+            $('#poster_all_desel').click(function() {
+                $('input[name^="poster_list"]').prop('checked', false);
+                return false;
+            });
+
+            $('#public_channel_all_sel').click(function() {
+                $('input[name^="public_channel_list"]').prop('checked', true);
+                return false;
+            });
+
+            $('#public_channel_all_desel').click(function() {
+                $('input[name^="public_channel_list"]').prop('checked', false);
+                return false;
+            });
+
+            $('#private_channel_all_sel').click(function() {
+                $('input[name^="private_channel_list"]').prop('checked', true);
+                return false;
+            });
+
+            $('#private_channel_all_desel').click(function() {
+                $('input[name^="private_channel_list"]').prop('checked', false);
+                return false;
+            });
+
+            $('#im_channel_all_sel').click(function() {
+                $('input[name^="im_channel_list"]').prop('checked', true);
+                return false;
+            });
+
+            $('#im_channel_all_desel').click(function() {
+                $('input[name^="im_channel_list"]').prop('checked', false);
+                return false;
+            });
+
+            $('#mpim_channel_all_sel').click(function() {
+                $('input[name^="mpim_channel_list"]').prop('checked', true);
+                return false;
+            });
+
+            $('#mpim_channel_all_desel').click(function() {
+                $('input[name^="mpim_channel_list"]').prop('checked', false);
+                return false;
+            });
+        });
+
+    </script>
+</head>
+<body>
+    <form id="form" name="form" action="/search" method="POST" target="_blank">
+        {{ form.hidden_tag() }}
+        <h1>Mail検索</h1>
+        <table border="1" width="98%">
+            <tr>
+                <th width="150px">
+                    {{ form.search_val.label }}
+                </th>
+                <td>
+                    {{ form.search_val }}
+                    &nbsp;
+                    {% for search_type in form.search_type %}
+                        {{ search_type }}
+                        {{ search_type.label }}
+                    {% endfor %}
+                    &nbsp;&nbsp;
+                    {{ form.is_target_title }}
+                    {{ form.is_target_title.label }}
+                    {{ form.is_target_body }}
+                    {{ form.is_target_body.label }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    {{ form.search_from_date.label }}
+                </th>
+                <td>
+                    {{ form.search_from_date }}
+                    ～
+                    {{ form.search_to_date }}
+                </td>
+            </tr>
+            <!--
+            <tr>
+                <th>
+                    宛先<br>
+                    <button id="mail_to_all_sel">全選択</button>
+                    <button id="mail_to_all_desel">全解除</button>
+                </th>
+                <td>
+                    <div class="checkbox-grid">
+                        {% for to in form.to_list %}
+                            <div class="checkbox-item">
+                                <label class="checkbox-label">
+                                    {{ to.checked(value=to.item_id.data) }} <span>{{ to.label.data }}</span>
+                                    {{ to.item_id() }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            -->
+            <tr>
+                <th>
+                    差出人<br>
+                    <button id="sender_all_sel">全選択</button>
+                    <button id="sender_all_desel">全解除</button>
+                </th>
+                <td>
+                    <div class="checkbox-grid">
+                        {% for sender in form.sender_list %}
+                            <div class="checkbox-item">
+                                <label class="checkbox-label">
+                                    {{ sender.checked(value=sender.item_id.data) }} <span>{{ sender.label.data }}</span>
+                                    {{ sender.item_id() }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th width="150px">
+                    検索場所
+                </th>
+                <td>
+                    {{ form.is_target_receive }}
+                    {{ form.is_target_receive.label }}
+                    {{ form.is_target_send }}
+                    {{ form.is_target_send.label }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    受信ボックス<br>
+                    <button id="folder_all_sel">全選択</button>
+                    <button id="folder_all_desel">全解除</button>
+                </th>
+                <td>
+                    <div class="checkbox-grid">
+                        {% for folder in form.folder_list %}
+                            <div class="checkbox-item">
+                                <label class="checkbox-label">
+                                    {{ folder.checked(value=folder.item_id.data) }} <span>{{ folder.label.data }}</span>
+                                    {{ folder.item_id() }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <br>
+        <table>
+            <tr>
+                <td>
+                    {{ form.search_button }}
+                </td>
+            </tr>
+        </table>
+        <br>
+    </form>
+</body>
+</html>
