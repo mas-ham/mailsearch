@@ -60,10 +60,10 @@
             {% for record in sender_list %}
                 <tr>
                     <td>
-                        <input type="checkbox" id="is_sender_display_{{ record.folder_id }}" name="is_sender_display" value="{{ record.sender_id }}" {{ record.checked_display }} />
+                        <input type="checkbox" name="is_sender_display" value="{{ record.email_address }}" {{ record.checked_display }} />
                     </td>
                     <td>
-                        <input type="checkbox" id="is_sender_check_{{ record.folder_id }}" name="is_sender_check" value="{{ record.sender_id }}" {{ record.checked_check }} />
+                        <input type="checkbox" name="is_sender_check" value="{{ record.email_address }}" {{ record.checked_check }} />
                     </td>
                     <td>
                         {{ record.email_address }}

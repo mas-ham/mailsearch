@@ -64,20 +64,20 @@ def get_sender_list(conn):
 
     sender_list = []
     for _, row in all_sender_list.iterrows():
-        email_address = row['sender']
-        # データがなければInsert
-        _insert_if_not_exists_sender(conn, email_address)
-
-        # 現在データを取得
-        target_sender = _get_sender_by_email_address(conn, email_address)
+        # email_address = row['email_address']
+        # # データがなければInsert
+        # _insert_if_not_exists_sender(conn, email_address)
+        #
+        # # 現在データを取得
+        # target_sender = _get_sender_by_email_address(conn, email_address)
         # print(target_folder.folder_id)
 
         sender_list.append({
-            'sender_id': target_sender.sender_id,
-            'email_address': email_address,
-            'display_name': target_sender.display_name,
-            'checked_display': 'checked' if target_sender.is_display else '',
-            'checked_check': 'checked' if target_sender.is_checked else '',
+            'sender_id': row['sender_id'],
+            'email_address': row['email_address'],
+            'display_name': row['display_name'],
+            'checked_display': 'checked' if row['is_display'] else '',
+            'checked_check': 'checked' if row['is_checked'] else '',
         })
 
     return sender_list
