@@ -151,8 +151,8 @@ def search():
     """
     form = MailSearchForm(request.form)
     model = _convert_search_model(form)
-    result_list = search_message.search(model)
-    print(result_list)
+    result_list = search_message.search(root_dir, model)
+    # print(result_list)
 
     result_form = MailSearchResultForm()
     result_form.search_val = form.search_val
@@ -192,8 +192,9 @@ def index_settings():
 
     with sql_shared_service.get_connection(root_dir) as conn:
         folder_list = search_settings.get_folder_list(conn)
+        sender_list = search_settings.get_sender_list(conn)
 
-    return render_template('indexSettings.html', form=form, folder_list=folder_list)
+    return render_template('indexSettings.html', form=form, folder_list=folder_list, sender_list=sender_list)
 
 
 @app.route('/registSettings', methods=['POST'])

@@ -10,7 +10,8 @@ def install(bin_dir, conn):
     cur = conn.cursor()
 
     # テーブルcreate
-    __create_table(cur, bin_dir, 'target_folder')
+    # __create_table(cur, bin_dir, 'target_folder')
+    # __create_table(cur, bin_dir, 'target_sender')
     __create_table(cur, bin_dir, 'tr_mail_messages')
 
     # インデックス

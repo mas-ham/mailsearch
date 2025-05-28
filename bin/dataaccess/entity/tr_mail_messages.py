@@ -1,22 +1,30 @@
 """
 Entity：tr_mail_messages
 
-create 2025/05/25 hamada
+create 2025/05/28 hamada
 """
 import dataclasses
 
 
 @dataclasses.dataclass
 class TrMailMessages:
-    sender = None
+    entry_id = None
+    store_id = None
     received = None
+    sender = None
+    to_email = None
+    cc_email = None
     subject = None
     body = None
-    folder_path = None
+    folder_id = None
 
-    def __init__(self, sender = None, received = None, subject = None, body = None, folder_path = None):
-        self.sender = sender
+    def __init__(self, entry_id = None, store_id = None, received = None, sender = None, to_email = None, cc_email = None, subject = None, body = None, folder_id = None):
+        self.entry_id = entry_id
+        self.store_id = store_id
         self.received = received
+        self.sender = sender
+        self.to_email = to_email
+        self.cc_email = cc_email
         self.subject = subject
         self.body = body
-        self.folder_path = folder_path
+        self.folder_id = folder_id

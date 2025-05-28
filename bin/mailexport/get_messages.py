@@ -43,49 +43,68 @@ class GetMessages:
         # 期間を取得
         oldest, latest = self.get_term()
 
-        def search_folder(folder, folder_path=""):
-            current_path = f"{folder_path}\\{folder.Name}" if folder_path else folder.Name
-            print(current_path)
-
-            if current_path in target_folders:
-
-                messages = folder.Items
-                # フィルタ
-                restriction = "[ReceivedTime] >= '" + oldest + "' AND [ReceivedTime] <= '" + latest + "'"
-                filtered_items = messages.Restrict(restriction)
-
-                try:
-                    for mail in filtered_items:
-                        # print(mail.ReceivedTime)
-                        received = mail.ReceivedTime.strftime('%Y-%m-%d %H:%M:%S')
-                        # print(received)
-                        org = _get_mail_messages_by_pk(conn, mail.SenderEmailAddress, received, mail.Subject)
-
-                        if org is None:
-                            # Insert
-                            entity = TrMailMessages()
-                            entity.sender = mail.SenderEmailAddress # Sender.Name
-                            entity.received = received
-                            entity.subject = mail.Subject
-                            entity.body = mail.Body
-                            entity.folder_path = current_path
-
-                            _insert_mail_messages(conn, entity)
-
-                except Exception as e:
-                    # アイテムアクセス不可でも無視
-                    shared_service.print_except(e, self.logger)
-
-            for subfolder in folder.Folders:
-                search_folder(subfolder, current_path)
-
         with sql_shared_service.get_connection(self.root_dir) as conn:
             target_folders = _get_target_folders(conn)
 
-            # 受信トレイから再帰的に検索
-            search_folder(inbox)
+            for target_folder in target_folders:
+                # フォルダを特定(受信トレイは除く)
+                folder = inbox
+                for subfolder_name in target_folder['folder_path'].split("\\")[1:]:
+                    folder = folder.Folders[subfolder_name]
+
+                # 受信トレイから再帰的に検索
+                self._search_folder(conn, folder, target_folder['folder_id'], oldest, latest)
 
             conn.commit()
+
+    def _search_folder(self, conn, folder, folder_id, oldest, latest):
+        """
+        Outlookメールを取得し登録する
+
+        Args:
+            conn:
+            folder:
+            folder_id:
+            oldest:
+            latest:
+
+        Returns:
+
+        """
+        print(folder)
+
+        messages = folder.Items
+        # フィルタ
+        restriction = "[ReceivedTime] >= '" + oldest + "' AND [ReceivedTime] <= '" + latest + "'"
+        filtered_items = messages.Restrict(restriction)
+
+        try:
+            store_id = _get_store_id_from_folder(folder)
+            for mail in filtered_items:
+                # print(mail.ReceivedTime)
+                received = mail.ReceivedTime.strftime('%Y-%m-%d %H:%M:%S')
+                # print(received)
+                org = _get_mail_messages_by_pk(conn, mail.EntryID, store_id)
+
+                if org is None:
+                    to_list, cc_list = self._get_recipients_addresses(mail)
+                    # Insert
+                    entity = TrMailMessages()
+                    entity.entry_id = mail.EntryID
+                    entity.store_id = store_id
+                    entity.received = received
+                    entity.sender = self._get_email_address(mail)
+                    entity.to_email = ';'.join(to_list)
+                    entity.cc_email = ';'.join(cc_list)
+                    entity.subject = mail.Subject
+                    entity.body = mail.Body
+                    entity.folder_id = folder_id
+
+                    _insert_mail_messages(conn, entity)
+
+        except Exception as e:
+            # アイテムアクセス不可でも無視
+            shared_service.print_except(e, self.logger)
 
 
     def get_term(self):
@@ -113,16 +132,135 @@ class GetMessages:
         return oldest, latest
 
 
+    def _get_email_address(self, mail):
+        """
+        Fromのメールアドレスを取得
+
+        Args:
+            mail:
+
+        Returns:
+
+        """
+        try:
+            if mail.SenderEmailType == 'EX':  # Exchangeの場合
+                return mail.Sender.GetExchangeUser().PrimarySmtpAddress
+            else:
+                return mail.SenderEmailAddress
+        except Exception as e:
+            shared_service.print_except(e, self.logger)
+            return mail.SenderEmailAddress
+
+
+    def _get_recipients_email(self, recipient):
+        """
+        To、CCのメールアドレスを取得
+
+        Args:
+            recipient:
+
+        Returns:
+
+        """
+        try:
+            address_entry = recipient.AddressEntry
+            if address_entry.Type == "EX":  # Exchangeのアドレス
+                exchange_user = address_entry.GetExchangeUser()
+                if exchange_user:
+                    return exchange_user.PrimarySmtpAddress
+            else:
+                # 通常のSMTPアドレス
+                return recipient.Address
+        except Exception as e:
+            shared_service.print_except(e, self.logger)
+            return ''
+
+
+    def _get_recipients_addresses(self, mail):
+        """
+        メールのToおよびCCのSMTPアドレス一覧を取得
+
+        Args:
+            mail:
+
+        Returns:
+
+        """
+        to_list = []
+        cc_list = []
+
+        for recipient in mail.Recipients:
+            address = self._get_recipients_email(recipient)
+            if address is None:
+                continue
+            if recipient.Type == 1:
+                # To
+                to_list.append(address)
+            elif recipient.Type == 2:
+                # CC
+                cc_list.append(address)
+
+        return to_list, cc_list
+
+
+def _get_store_id_from_folder(folder):
+    """
+    フォルダのStoreIDを取得
+
+    Args:
+        folder:
+
+    Returns:
+
+    """
+    try:
+        return folder.StoreID
+    except Exception as e:
+        print(f"Error getting StoreID: {e}")
+        return None
+
+
+
 def _get_target_folders(conn):
+    """
+    取得対象フォルダを取得
+
+    Args:
+        conn:
+
+    Returns:
+
+    """
     dataaccess = TargetFolderDataAccess(conn)
     cond = [Condition('is_target', 1)]
-    return [r.folder_path for r in dataaccess.select(conditions=cond)]
+    return [{'folder_id': r.folder_id, 'folder_path': r.folder_path} for r in dataaccess.select(conditions=cond)]
 
-def _get_mail_messages_by_pk(conn, sender, received, subject):
+def _get_mail_messages_by_pk(conn, entry_id, store_id):
+    """
+    メッセージを主キーで取得
+
+    Args:
+        conn:
+        entry_id:
+        store_id:
+
+    Returns:
+
+    """
     dataaccess = TrMailMessagesDataAccess(conn)
-    return dataaccess.select_by_pk(sender, received, subject)
+    return dataaccess.select_by_pk(entry_id, store_id)
 
 
 def _insert_mail_messages(conn, entity: TrMailMessages):
+    """
+    メッセージ登録
+
+    Args:
+        conn:
+        entity:
+
+    Returns:
+
+    """
     dataaccess = TrMailMessagesDataAccess(conn)
     dataaccess.insert(entity)

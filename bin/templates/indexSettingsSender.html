@@ -1,5 +1,5 @@
 <!--
-    メール検索：設定画面
+    メール検索：差出人設定画面
 -->
 <!DOCTYPE html>
 <html lang="ja">
@@ -18,29 +18,7 @@
 <body>
     <form id="form" name="form" action="/registSettings" method="POST">
         {{ form.hidden_tag() }}
-        <h1>メール検索設定</h1>
-        <h2>取込み対象フォルダ</h2>
-        <table border="1">
-            <tr>
-                <th width="30px">
-                    対象
-                </th>
-                <th width="800px">
-                    フォルダー
-                </th>
-            </tr>
-            {% for record in folder_list %}
-                <tr>
-                    <td>
-                        <input type="checkbox" id="is_target_{{ record.folder_id }}" name="is_target" value="{{ record.folder_id }}" {{ record.checked }} />
-                    </td>
-                    <td>
-                        {{ record.folder_path }}
-                    </td>
-                </tr>
-            {% endfor %}
-        </table>
-        <br>
+        <h1>メール検索差出人設定</h1>
         <h2>差出人</h2>
         <table border="1">
             <tr>

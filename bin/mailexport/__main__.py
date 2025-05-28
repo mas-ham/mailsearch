@@ -1,7 +1,7 @@
 """
-Slack投稿取得__main__
+メール登録__main__
 
-create 2023/04/05 TIS hamada
+create 2023/05/27 TIS hamada
 """
 import os
 import sys
@@ -48,23 +48,6 @@ def execute(logger: Logger, root_dir, bin_dir):
                 bin_dir,
             )
             service.main()
-
-            # 結果返却
-            # shared_service.result_return(root_dir, {'status': status, 'message': message, 'data': result_list})
-
-        case 'get_masters':
-            # マスター情報取得
-            # パフォーマンスを考慮し関数内でimport
-            from slackexport.get_masterts import GetMasters
-            service = GetMasters(
-                logger,
-                root_dir,
-                bin_dir,
-            )
-            service.main()
-
-            # 結果返却
-            # shared_service.result_return(root_dir, {'status': status, 'message': message, 'data': result_list})
 
         case _:
             pass

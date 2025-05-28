@@ -10,8 +10,9 @@ if __name__ == '__main__':
     bin_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
     table_list = [
-        {'table_id': 'target_folder', 'autoincrement': True},
-        {'table_id': 'tr_mail_messages', 'autoincrement': False},
+        # {'table_id': 'target_folder', 'autoincrement': True},
+        {'table_id': 'target_sender', 'autoincrement': False},
+        # {'table_id': 'tr_mail_messages', 'autoincrement': False},
     ]
     try:
         generate(root_dir, bin_dir, table_list)

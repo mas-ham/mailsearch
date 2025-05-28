@@ -1,7 +1,7 @@
 """
 dataaccess：tr_mail_messages
 
-create 2025/05/25 hamada
+create 2025/05/28 hamada
 """
 from dataaccess.common.base_dataaccess import BaseDataAccess
 from dataaccess.entity.tr_mail_messages import TrMailMessages
@@ -14,11 +14,15 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         super().__init__(conn)
 
         self.col_list = [
-            'sender',
+            'entry_id',
+            'store_id',
             'received',
+            'sender',
+            'to_email',
+            'cc_email',
             'subject',
             'body',
-            'folder_path',
+            'folder_id',
         ]
 
 
@@ -37,25 +41,24 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         results = self.execute_select(TABLE_ID, conditions, order_by_list)
         if results.empty:
             return []
-        return [TrMailMessages(row['sender'], row['received'], row['subject'], row['body'], row['folder_path']) for _, row in results.iterrows()]
+        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for _, row in results.iterrows()]
 
 
-    def select_by_pk(self, sender, received, subject) -> TrMailMessages | None:
+    def select_by_pk(self, entry_id, store_id) -> TrMailMessages | None:
         """
         Select_by_PK
 
         Args:
-            sender:
-            received:
-            subject:
+            entry_id:
+            store_id:
 
         Returns:
 
         """
-        results = self.execute_select_by_pk(TABLE_ID, sender = sender, received = received, subject = subject)
+        results = self.execute_select_by_pk(TABLE_ID, entry_id = entry_id, store_id = store_id)
         if results.empty:
             return None
-        return TrMailMessages(results.iat[0, 0], results.iat[0, 1], results.iat[0, 2], results.iat[0, 3], results.iat[0, 4])
+        return TrMailMessages(results.iat[0, 0], results.iat[0, 1], results.iat[0, 2], results.iat[0, 3], results.iat[0, 4], results.iat[0, 5], results.iat[0, 6], results.iat[0, 7], results.iat[0, 8])
 
 
     def select_all(self, order_by_list = None) -> list[TrMailMessages]:
@@ -71,7 +74,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         results = self.execute_select_all(TABLE_ID, order_by_list)
         if results.empty:
             return []
-        return [TrMailMessages(row['sender'], row['received'], row['subject'], row['body'], row['folder_path']) for _, row in results.iterrows()]
+        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for _, row in results.iterrows()]
 
 
     def insert(self, entity: TrMailMessages) -> int:
@@ -85,11 +88,15 @@ class TrMailMessagesDataAccess(BaseDataAccess):
 
         """
         params = (
-            entity.sender,
+            entity.entry_id,
+            entity.store_id,
             entity.received,
+            entity.sender,
+            entity.to_email,
+            entity.cc_email,
             entity.subject,
             entity.body,
-            entity.folder_path,
+            entity.folder_id,
         )
         return self.execute_insert(TABLE_ID, self.col_list, params)
 
@@ -108,65 +115,79 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         for entity in entity_list:
             params.append(
                 (
-                    entity.sender,
+                    entity.entry_id,
+                    entity.store_id,
                     entity.received,
+                    entity.sender,
+                    entity.to_email,
+                    entity.cc_email,
                     entity.subject,
                     entity.body,
-                    entity.folder_path,
+                    entity.folder_id,
                 )
             )
         self.execute_insert_many(TABLE_ID, self.col_list, params)
 
 
-    def update(self, entity: TrMailMessages, sender, received, subject):
+    def update(self, entity: TrMailMessages, entry_id, store_id):
         """
         Update
 
         Args:
             entity:
-            sender:
-            received:
-            subject:
+            entry_id:
+            store_id:
 
         Returns:
 
         """
         update_info = {
-            'sender': entity.sender,
+            'entry_id': entity.entry_id,
+            'store_id': entity.store_id,
             'received': entity.received,
+            'sender': entity.sender,
+            'to_email': entity.to_email,
+            'cc_email': entity.cc_email,
             'subject': entity.subject,
             'body': entity.body,
-            'folder_path': entity.folder_path,
+            'folder_id': entity.folder_id,
         }
-        self.execute_update(TABLE_ID, update_info, sender = sender, received = received, subject = subject)
+        self.execute_update(TABLE_ID, update_info, entry_id = entry_id, store_id = store_id)
 
 
-    def update_selective(self, entity: TrMailMessages, sender, received, subject):
+    def update_selective(self, entity: TrMailMessages, entry_id, store_id):
         """
         Update selective
 
         Args:
             entity:
-            sender:
-            received:
-            subject:
+            entry_id:
+            store_id:
 
         Returns:
 
         """
         update_info = {}
-        if entity.sender is not None:
-            update_info['sender'] = entity.sender
+        if entity.entry_id is not None:
+            update_info['entry_id'] = entity.entry_id
+        if entity.store_id is not None:
+            update_info['store_id'] = entity.store_id
         if entity.received is not None:
             update_info['received'] = entity.received
+        if entity.sender is not None:
+            update_info['sender'] = entity.sender
+        if entity.to_email is not None:
+            update_info['to_email'] = entity.to_email
+        if entity.cc_email is not None:
+            update_info['cc_email'] = entity.cc_email
         if entity.subject is not None:
             update_info['subject'] = entity.subject
         if entity.body is not None:
             update_info['body'] = entity.body
-        if entity.folder_path is not None:
-            update_info['folder_path'] = entity.folder_path
+        if entity.folder_id is not None:
+            update_info['folder_id'] = entity.folder_id
 
-        self.execute_update(TABLE_ID, update_info, sender = sender, received = received, subject = subject)
+        self.execute_update(TABLE_ID, update_info, entry_id = entry_id, store_id = store_id)
 
 
     def delete(self, key: TrMailMessages):
@@ -180,33 +201,40 @@ class TrMailMessagesDataAccess(BaseDataAccess):
 
         """
         key_map = {}
-        if key.sender is not None:
-            key_map['sender'] = key.sender
+        if key.entry_id is not None:
+            key_map['entry_id'] = key.entry_id
+        if key.store_id is not None:
+            key_map['store_id'] = key.store_id
         if key.received is not None:
             key_map['received'] = key.received
+        if key.sender is not None:
+            key_map['sender'] = key.sender
+        if key.to_email is not None:
+            key_map['to_email'] = key.to_email
+        if key.cc_email is not None:
+            key_map['cc_email'] = key.cc_email
         if key.subject is not None:
             key_map['subject'] = key.subject
         if key.body is not None:
             key_map['body'] = key.body
-        if key.folder_path is not None:
-            key_map['folder_path'] = key.folder_path
+        if key.folder_id is not None:
+            key_map['folder_id'] = key.folder_id
 
         self.execute_delete(TABLE_ID, **key_map)
 
 
-    def delete_by_pk(self, sender, received, subject):
+    def delete_by_pk(self, entry_id, store_id):
         """
         Delete_by_PK
 
         Args:
-            sender:
-            received:
-            subject:
+            entry_id:
+            store_id:
 
         Returns:
 
         """
-        self.execute_delete(TABLE_ID, sender = sender, received = received, subject = subject)
+        self.execute_delete(TABLE_ID, entry_id = entry_id, store_id = store_id)
 
 
     def delete_all(self):

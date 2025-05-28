@@ -12,8 +12,11 @@ import dateutil
 import pandas as pd
 import bleach
 
-from common import const
+from common import const, sql_shared_service
 from mailsearch.models import MailSearchModel, SlackDetailModel, SlackResultModel
+from dataaccess.common.set_cond_model import Condition
+from dataaccess.common.set_sort_model import OrderBy
+from dataaccess.general.tr_mail_messages_dataaccess import TrMailMessagesDataAccess
 
 
 # def get_poster_list(conn):
@@ -71,94 +74,115 @@ from mailsearch.models import MailSearchModel, SlackDetailModel, SlackResultMode
 #     return channel_list
 
 
-def search(model: MailSearchModel):
+def search(root_dir, model: MailSearchModel):
     """
     検索
 
     Args:
+        root_dir:
         model:
 
     Returns:
 
     """
 
-    pythoncom.CoInitialize() # type: ignore
-    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    inbox = outlook.GetDefaultFolder(6)
+    # FIXME:
+    with sql_shared_service.get_connection(root_dir) as conn:
+        dataaccess = TrMailMessagesDataAccess(conn)
+        cond = [
+            Condition('subject', 'メール', 'like')
+        ]
+        results = dataaccess.select(conditions=cond)
 
-    results = []
+    result_list = []
+    for mail in results:
+        result_list.append({
+            "subject": mail.subject,
+            "sender": mail.sender,
+            "received": mail.received,
+            # "entry_id": mail.EntryID,
+            "folder_path": mail.folder_path,
+        })
 
-    def match_keywords(text):
-        if not text:
-            return False
-        if not model.search_val_list:
-            return True
-        if model.search_type == '01':
-            return all(kw.lower() in text.lower() for kw in model.search_val_list)
-        else:
-            return any(kw.lower() in text.lower() for kw in model.search_val_list)
+    return result_list
 
-    def is_within_date_range(mail):
-        if not model.search_from_date and not model.search_to_date:
-            return True
-        mail_time = mail.ReceivedTime
-        start_date = dateutil.parser.parse(model.search_from_date) if model.search_from_date else ''
-        end_date = dateutil.parser.parse(model.search_to_date) if model.search_to_date else ''
-        return ((not start_date or mail_time >= start_date) and
-                (not end_date or mail_time <= end_date))
-
-    def is_sender_match(mail):
-        if not model.sender_list:
-            return True
-        sender = str(mail.SenderEmailAddress).lower()
-        return any(addr.lower() in sender for addr in model.sender_list)
-
-    # def is_to_match(mail):
-    #     if not model.to_list:
+    # pythoncom.CoInitialize() # type: ignore
+    # outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    # inbox = outlook.GetDefaultFolder(6)
+    #
+    # results = []
+    #
+    # def match_keywords(text):
+    #     if not text:
+    #         return False
+    #     if not model.search_val_list:
+    #         return True
+    #     if model.search_type == '01':
+    #         return all(kw.lower() in text.lower() for kw in model.search_val_list)
+    #     else:
+    #         return any(kw.lower() in text.lower() for kw in model.search_val_list)
+    #
+    # def is_within_date_range(mail):
+    #     if not model.search_from_date and not model.search_to_date:
+    #         return True
+    #     mail_time = mail.ReceivedTime
+    #     start_date = dateutil.parser.parse(model.search_from_date) if model.search_from_date else ''
+    #     end_date = dateutil.parser.parse(model.search_to_date) if model.search_to_date else ''
+    #     return ((not start_date or mail_time >= start_date) and
+    #             (not end_date or mail_time <= end_date))
+    #
+    # def is_sender_match(mail):
+    #     if not model.sender_list:
     #         return True
     #     sender = str(mail.SenderEmailAddress).lower()
-    #     return any(addr.lower() in sender for addr in model.to_list)
-
-    def match_mail(mail):
-        try:
-            if mail.Class != 43:
-                return False
-            if model.is_target_title and not model.is_target_body:
-                target_text = mail.Subject
-            elif model.is_target_body and not model.is_target_title:
-                target_text = mail.Body
-            else:
-                target_text = (mail.Subject or "") + " " + (mail.Body or "")
-
-            return (match_keywords(target_text)
-                    and is_within_date_range(mail)
-                    and is_sender_match(mail))
-        except:
-            return False
-
-    def search_folder(folder, folder_path=""):
-        current_path = f"{folder_path}\\{folder.Name}" if folder_path else folder.Name
-        try:
-            for mail in folder.Items:
-                if match_mail(mail):
-                    results.append({
-                        "subject": mail.Subject,
-                        "sender": mail.SenderEmailAddress,
-                        "received": mail.ReceivedTime,
-                        "entry_id": mail.EntryID,
-                        "folder_path": current_path
-                    })
-        except Exception as e:
-            pass  # アイテムアクセス不可でも無視
-
-        for subfolder in folder.Folders:
-            search_folder(subfolder, current_path)
-
-
-    # 開始：受信トレイから再帰的に検索
-    search_folder(inbox)
-
-    return results
+    #     return any(addr.lower() in sender for addr in model.sender_list)
+    #
+    # # def is_to_match(mail):
+    # #     if not model.to_list:
+    # #         return True
+    # #     sender = str(mail.SenderEmailAddress).lower()
+    # #     return any(addr.lower() in sender for addr in model.to_list)
+    #
+    # def match_mail(mail):
+    #     try:
+    #         if mail.Class != 43:
+    #             return False
+    #         if model.is_target_title and not model.is_target_body:
+    #             target_text = mail.Subject
+    #         elif model.is_target_body and not model.is_target_title:
+    #             target_text = mail.Body
+    #         else:
+    #             target_text = (mail.Subject or "") + " " + (mail.Body or "")
+    #
+    #         return (match_keywords(target_text)
+    #                 and is_within_date_range(mail)
+    #                 and is_sender_match(mail))
+    #     except:
+    #         return False
+    #
+    # def search_folder(folder, folder_path=""):
+    #     current_path = f"{folder_path}\\{folder.Name}" if folder_path else folder.Name
+    #     try:
+    #         for mail in folder.Items:
+    #             if match_mail(mail):
+    #                 results.append({
+    #                     "subject": mail.Subject,
+    #                     "sender": mail.SenderEmailAddress,
+    #                     "received": mail.ReceivedTime,
+    #                     "entry_id": mail.EntryID,
+    #                     "folder_path": current_path
+    #                 })
+    #     except Exception as e:
+    #         pass  # アイテムアクセス不可でも無視
+    #
+    #     for subfolder in folder.Folders:
+    #         search_folder(subfolder, current_path)
+    #
+    #
+    # # 開始：受信トレイから再帰的に検索
+    # search_folder(inbox)
+    #
+    # return results
 
 
 def _convert_to_json_for_search(record_list, search_val_list):

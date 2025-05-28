@@ -1,7 +1,7 @@
 """
 dataaccess：target_folder
 
-create 2025/05/25 hamada
+create 2025/05/28 hamada
 """
 from dataaccess.common.base_dataaccess import BaseDataAccess
 from dataaccess.entity.target_folder import TargetFolder
