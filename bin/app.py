@@ -6,6 +6,7 @@ from flask_wtf import FlaskForm
 from wtforms import Form, StringField, DateField, RadioField, BooleanField, FieldList, FormField, HiddenField, SubmitField
 
 from common import const, sql_shared_service
+from app_common import app_shared_service
 from mailsearch import search_message, search_settings, models
 
 
@@ -40,6 +41,7 @@ class MailSearchForm(FlaskForm):
     search_from_date = DateField(label='期間')
     search_to_date = DateField(label='')
 
+    sender_input = StringField(label='')
     to_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
     sender_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
     folder_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
@@ -95,48 +97,23 @@ def index():
     form.is_target_body.data = True
     # 検索場所
     form.is_target_receive.data = True
-    # 差出人
-    sender_list = [
-        {'email_address': 'xxx1@xxx.com', 'display_name': 'ユーザー1', 'checked': True},
-        {'email_address': 'xxx2@xxx.com', 'display_name': 'ユーザー2', 'checked': True},
-        {'email_address': 'xxx3@xxx.com', 'display_name': 'ユーザー3', 'checked': False},
-        {'email_address': 'xxx4@xxx.com', 'display_name': 'ユーザー4', 'checked': True},
-        {'email_address': 'xxx5@xxx.com', 'display_name': 'ユーザー5', 'checked': False},
-        {'email_address': 'xxx6@xxx.com', 'display_name': 'ユーザー6', 'checked': False},
-    ]
-    for data in sender_list:
-        entry = form.sender_list.append_entry()
-        entry.label.data = data['display_name']
-        entry.item_id.data = data['email_address']
-        if data['checked']:
-            entry.checked.data = True
-    # 宛先
-    to_list = [
-        {'email_address': 'xxx1@xxx.com', 'display_name': 'ユーザー1', 'checked': False},
-        {'email_address': 'xxx2@xxx.com', 'display_name': 'ユーザー2', 'checked': False},
-        {'email_address': 'xxx3@xxx.com', 'display_name': 'ユーザー3', 'checked': False},
-        {'email_address': 'xxx4@xxx.com', 'display_name': 'ユーザー4', 'checked': False},
-        {'email_address': 'xxx5@xxx.com', 'display_name': 'ユーザー5', 'checked': False},
-        {'email_address': 'xxx6@xxx.com', 'display_name': 'ユーザー6', 'checked': False},
-    ]
-    for data in to_list:
-        entry = form.to_list.append_entry()
-        entry.label.data = data['display_name']
-        entry.item_id.data = data['email_address']
-        if data['checked']:
-            entry.checked.data = True
-
-    # 受信フォルダ
-    folder_list = [
-        {'entry_id': '1111', 'store_id': 'A111', 'display_name': 'フォルダー1', 'checked': False},
-        {'entry_id': '2222', 'store_id': 'A222', 'display_name': 'フォルダー2', 'checked': False},
-    ]
-    for data in folder_list:
-        entry = form.folder_list.append_entry()
-        entry.label.data = data['display_name']
-        entry.item_id.data = data['entry_id'] + ',' + data['store_id']
-        if data['checked']:
-            entry.checked.data = True
+    with sql_shared_service.get_connection(root_dir) as conn:
+        # 差出人
+        sender_list = search_message.get_sender_list(conn)
+        for data in sender_list:
+            entry = form.sender_list.append_entry()
+            entry.label.data = f"{data['display_name']} ({app_shared_service.extract_domain(data['email_address'])})"
+            entry.item_id.data = data['email_address']
+            if data['is_checked']:
+                entry.checked.data = True
+        # 受信フォルダ
+        folder_list = search_message.get_folder_list(conn)
+        for data in folder_list:
+            entry = form.folder_list.append_entry()
+            entry.label.data = data['folder_path']
+            entry.item_id.data = data['folder_id']
+            if data['is_target']:
+                entry.checked.data = True
 
     return render_template('index.html', form = form)
 
@@ -151,7 +128,9 @@ def search():
     """
     form = MailSearchForm(request.form)
     model = _convert_search_model(form)
-    result_list = search_message.search(root_dir, model)
+
+    with sql_shared_service.get_connection(root_dir) as conn:
+        result_list = search_message.search(conn, root_dir, model)
     # print(result_list)
 
     result_form = MailSearchResultForm()
@@ -206,10 +185,12 @@ def regist_settings():
 
     """
     is_target_selected = request.form.getlist('is_target')
+    is_sender_display_selected = request.form.getlist('is_sender_display')
+    is_sender_checked_selected = request.form.getlist('is_sender_checked')
 
     # 登録
     with sql_shared_service.get_connection(root_dir) as conn:
-        search_settings.regist(conn, is_target_selected)
+        search_settings.regist(conn, is_target_selected, is_sender_display_selected, is_sender_checked_selected)
 
     return redirect(url_for('index_settings'))
 
@@ -234,6 +215,7 @@ def _convert_search_model(form: MailSearchForm) -> models.MailSearchModel:
         form.search_to_date.data,
         form.is_target_receive.data,
         form.is_target_send.data,
+        [data.strip() for data in form.sender_input.data.split(';')],
         [entry.item_id.data for entry in form.to_list if entry.checked.data],
         [entry.item_id.data for entry in form.sender_list if entry.checked.data],
         [entry.item_id.data for entry in form.folder_list if entry.checked.data],

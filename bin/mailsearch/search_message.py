@@ -14,71 +14,64 @@ import bleach
 
 from common import const, sql_shared_service
 from mailsearch.models import MailSearchModel, SlackDetailModel, SlackResultModel
+from dataaccess.ext.search_dataaccess import SearchDataaccess
+from dataaccess.general.target_sender_dataaccess import TargetSenderDataAccess
+from dataaccess.general.target_folder_dataaccess import TargetFolderDataAccess
 from dataaccess.common.set_cond_model import Condition
 from dataaccess.common.set_sort_model import OrderBy
 from dataaccess.general.tr_mail_messages_dataaccess import TrMailMessagesDataAccess
 
 
-# def get_poster_list(conn):
-#     """
-#     投稿者/返信者一覧を取得
-#
-#     Args:
-#         conn:
-#
-#     Returns:
-#
-#     """
-#     dataaccess = slack_search_dataaccess.SlackSearchDataaccess(conn)
-#     results = dataaccess.get_poster_list()
-#
-#     poster_list = []
-#     for _, row in results.iterrows():
-#         if row['user_id'] == 'deactivateduser':
-#             continue
-#         if row['display_flg'] is None or str(row['display_flg']) == '1':
-#             poster_list.append({
-#                 'slack_user_id': row['slack_user_id'],
-#                 'user_id': row['user_id'],
-#                 'user_name': row['user_name'],
-#                 'display_name': f"{row['user_id']}：{row['user_name']}",
-#                 'checked': row['default_check_flg'],
-#             })
-#
-#     return poster_list
-#
-#
-# def get_channel_list(conn):
-#     """
-#     チャンネル一覧を取得
-#
-#     Args:
-#         conn:
-#
-#     Returns:
-#
-#     """
-#     dataaccess = slack_search_dataaccess.SlackSearchDataaccess(conn)
-#     results = dataaccess.get_channel_list()
-#
-#     channel_list = []
-#     for _, row in results.iterrows():
-#         if row['display_flg'] is None or str(row['display_flg']) == '1':
-#             channel_list.append({
-#                 'channel_id': row['channel_id'],
-#                 'channel_type': row['channel_type'],
-#                 'channel_name': row['channel_name'],
-#                 'checked': row['default_check_flg'],
-#             })
-#
-#     return channel_list
+
+def get_sender_list(conn):
+
+    dataaccess = TargetSenderDataAccess(conn)
+    cond = [
+        Condition('is_display', 1)
+    ]
+    results = dataaccess.select(conditions=cond)
+
+    sender_list = []
+    for sender in results:
+        sender_list.append({
+            'sender_id': sender.sender_id,
+            'email_address': sender.email_address,
+            'display_name': sender.display_name,
+            'is_display': sender.is_display,
+            'is_checked': sender.is_checked,
+        })
+
+    return sender_list
 
 
-def search(root_dir, model: MailSearchModel):
+def get_folder_list(conn):
+
+    dataaccess = TargetFolderDataAccess(conn)
+    cond = [
+        Condition('is_target', 1)
+    ]
+    sort = [
+        OrderBy('folder_path')
+    ]
+    results = dataaccess.select(conditions=cond, order_by_list=sort)
+
+    folder_list = []
+    for folder in results:
+        folder_list.append({
+            'folder_id': folder.folder_id,
+            'folder_path': folder.folder_path.split('\\')[-1],
+            'is_target': folder.is_target,
+        })
+
+    return folder_list
+
+
+def search(conn, root_dir, model: MailSearchModel):
     """
     検索
 
     Args:
+        conn:
         root_dir:
         model:
 
@@ -87,23 +80,18 @@ def search(root_dir, model: MailSearchModel):
     """
 
     # FIXME:
-    with sql_shared_service.get_connection(root_dir) as conn:
-        dataaccess = TrMailMessagesDataAccess(conn)
-        cond = [
-            Condition('subject', 'メール', 'like')
-        ]
-        results = dataaccess.select(conditions=cond)
+    dataaccess = SearchDataaccess(conn)
+    results = dataaccess.search(model)
 
     result_list = []
-    for mail in results:
+    for _, row in results.iterrows():
         result_list.append({
-            "subject": mail.subject,
-            "sender": mail.sender,
-            "received": mail.received,
-            # "entry_id": mail.EntryID,
-            "folder_path": mail.folder_path,
+            'folder_path': row['folder_path'],
+            'sender': row['sender'],
+            'sender_name': row['sender_name'],
+            'received': row['received'],
+            'subject': row['subject'],
         })
-
     return result_list
 
     # pythoncom.CoInitialize() # type: ignore

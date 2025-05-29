@@ -15,11 +15,11 @@ td {
 }
 
 .checkbox-item {
-  width: 19%; /* 100% ÷ 5 = 20%、少し余裕持たせる */
+  width: 24%; /* 100% ÷ 5 = 20%、少し余裕持たせる */
   box-sizing: border-box;
 }
 
 .checkbox-label {
   display: inline-block;
-  width: 250px;
+  width: 300px;
 }

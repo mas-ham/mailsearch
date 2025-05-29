@@ -87,13 +87,15 @@ class GetMessages:
                 org = _get_mail_messages_by_pk(conn, mail.EntryID, store_id)
 
                 if org is None:
-                    to_list, cc_list = self._get_recipients_addresses(mail)
+                    from_email_address, from_display_name = _get_from_email(mail)
+                    to_list, cc_list = _get_recipients_addresses(mail)
                     # Insert
                     entity = TrMailMessages()
                     entity.entry_id = mail.EntryID
                     entity.store_id = store_id
                     entity.received = received
-                    entity.sender = self._get_email_address(mail)
+                    entity.sender = from_email_address
+                    entity.sender_name = from_display_name.strip()
                     entity.to_email = ';'.join(to_list)
                     entity.cc_email = ';'.join(cc_list)
                     entity.subject = mail.Subject
@@ -132,75 +134,80 @@ class GetMessages:
         return oldest, latest
 
 
-    def _get_email_address(self, mail):
-        """
-        Fromのメールアドレスを取得
+def _get_from_email(mail):
+    """
+    Fromのメールアドレスを取得
 
-        Args:
-            mail:
+    Args:
+        mail:
 
-        Returns:
+    Returns:
 
-        """
-        try:
-            if mail.SenderEmailType == 'EX':  # Exchangeの場合
-                return mail.Sender.GetExchangeUser().PrimarySmtpAddress
-            else:
-                return mail.SenderEmailAddress
-        except Exception as e:
-            shared_service.print_except(e, self.logger)
-            return mail.SenderEmailAddress
+    """
+    try:
+        if mail.SenderEmailType == 'EX':  # Exchangeの場合
+            exchange_user = mail.Sender.GetExchangeUser()
+            email_address = exchange_user.PrimarySmtpAddress
+            display_name = mail.sendername
+        else:
+            email_address = mail.SenderEmailAddress
+            display_name = mail.sendername
+        return email_address, display_name
+    except Exception as e:
+        shared_service.print_except(e)
+        email_address = mail.SenderEmailAddress
+        display_name = mail.sendername
+        return email_address, display_name
+
+def _get_recipients_email(recipient):
+    """
+    To、CCのメールアドレスを取得
+
+    Args:
+        recipient:
+
+    Returns:
+
+    """
+    try:
+        address_entry = recipient.AddressEntry
+        if address_entry.Type == "EX":  # Exchangeのアドレス
+            exchange_user = address_entry.GetExchangeUser()
+            if exchange_user:
+                return exchange_user.PrimarySmtpAddress
+        else:
+            # 通常のSMTPアドレス
+            return recipient.Address
+    except Exception as e:
+        shared_service.print_except(e)
+        return ''
 
 
-    def _get_recipients_email(self, recipient):
-        """
-        To、CCのメールアドレスを取得
+def _get_recipients_addresses(mail):
+    """
+    メールのToおよびCCのSMTPアドレス一覧を取得
 
-        Args:
-            recipient:
+    Args:
+        mail:
 
-        Returns:
+    Returns:
 
-        """
-        try:
-            address_entry = recipient.AddressEntry
-            if address_entry.Type == "EX":  # Exchangeのアドレス
-                exchange_user = address_entry.GetExchangeUser()
-                if exchange_user:
-                    return exchange_user.PrimarySmtpAddress
-            else:
-                # 通常のSMTPアドレス
-                return recipient.Address
-        except Exception as e:
-            shared_service.print_except(e, self.logger)
-            return ''
+    """
+    to_list = []
+    cc_list = []
 
+    for recipient in mail.Recipients:
+        address = _get_recipients_email(recipient)
+        if address is None:
+            continue
+        if recipient.Type == 1:
+            # To
+            to_list.append(address)
+        elif recipient.Type == 2:
+            # CC
+            cc_list.append(address)
 
-    def _get_recipients_addresses(self, mail):
-        """
-        メールのToおよびCCのSMTPアドレス一覧を取得
-
-        Args:
-            mail:
-
-        Returns:
-
-        """
-        to_list = []
-        cc_list = []
-
-        for recipient in mail.Recipients:
-            address = self._get_recipients_email(recipient)
-            if address is None:
-                continue
-            if recipient.Type == 1:
-                # To
-                to_list.append(address)
-            elif recipient.Type == 2:
-                # CC
-                cc_list.append(address)
-
-        return to_list, cc_list
+    return to_list, cc_list
 
 
 def _get_store_id_from_folder(folder):

@@ -5,12 +5,11 @@
 import pandas as pd
 
 # 差出人一覧を取得
-SQL_GET_DISTINCT_SENDER_LIST = (
+SQL_GET_SENDER_LIST = (
     """
     SELECT
-        DISTINCT
-        mail.sender                                   AS email_address
-      , mail.display_name                             AS display_name
+        sender_info.sender                            AS email_address
+      , sender_info.sender_name                       AS display_name
       , CASE WHEN target.sender_id IS NULL THEN 0
                                            ELSE target.is_display 
                                            END        AS is_display
@@ -18,22 +17,52 @@ SQL_GET_DISTINCT_SENDER_LIST = (
                                            ELSE target.is_checked 
                                            END        AS is_checked
     FROM
-      tr_mail_messages               mail
+      (
+        SELECT
+            mail.sender                   AS sender
+          , MIN(mail.sender_name)         AS sender_name
+        FROM
+          tr_mail_messages                mail
+        WHERE
+              mail.sender NOT LIKE '/%'
+          AND mail.sender <> ''
+        GROUP BY
+            mail.sender
+      ) sender_info
       LEFT OUTER JOIN target_sender  target
-        ON  target.email_address     = mail.sender
-    WHERE
-          mail.sender NOT LIKE '/%'
-      AND mail.sender <> ''
+        ON  target.email_address     = sender_info.sender
     ORDER BY
+        sender_info.sender
+    """
+)
+
+# 表示名取得
+SQL_GET_SENDER_NAME = (
+    """
+    SELECT
+        MIN(mail.sender_name)         AS sender_name
+    FROM
+      tr_mail_messages                mail
+    WHERE
+          mail.sender = ?
+    GROUP BY
         mail.sender
     """
 )
+
 
 
 class SettingsDataaccess:
     def __init__(self, conn):
         self.conn = conn
 
-    def get_distinct_sender_list(self):
-        return pd.read_sql(SQL_GET_DISTINCT_SENDER_LIST, self.conn)
+    def get_sender_list(self):
+        return pd.read_sql(SQL_GET_SENDER_LIST, self.conn)
+
+    def get_sender_name(self, email_address) -> str:
+        results = pd.read_sql(SQL_GET_SENDER_NAME, self.conn, params=[email_address])
+        if results.empty:
+            return ''
+
+        return results.iloc[0, 0]
 

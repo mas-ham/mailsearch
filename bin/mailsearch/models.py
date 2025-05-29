@@ -16,6 +16,7 @@ class MailSearchModel:
     search_to_date: str = ''
     is_target_receive: bool = True
     is_target_send: bool = True
+    sender_input_list: list = None
     to_list: list = None
     sender_list: list = None
     folder_list: list = None

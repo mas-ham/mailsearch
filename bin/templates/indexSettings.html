@@ -50,20 +50,26 @@
                 <th width="30px">
                     初期値
                 </th>
+                <th width="100px">
+                    domain
+                </th>
                 <th width="300px">
                     email_address
                 </th>
-                <th width="400px">
+                <th width="600px">
                     display_name
                 </th>
             </tr>
             {% for record in sender_list %}
                 <tr>
                     <td>
-                        <input type="checkbox" name="is_sender_display" value="{{ record.email_address }}" {{ record.checked_display }} />
+                        <input type="checkbox" name="is_sender_display" value="{{ record.email_address }}" {{ record.is_display }} />
                     </td>
                     <td>
-                        <input type="checkbox" name="is_sender_check" value="{{ record.email_address }}" {{ record.checked_check }} />
+                        <input type="checkbox" name="is_sender_checked" value="{{ record.email_address }}" {{ record.is_checked }} />
+                    </td>
+                    <td>
+                        {{ record.domain }}
                     </td>
                     <td>
                         {{ record.email_address }}

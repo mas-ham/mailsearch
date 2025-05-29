@@ -130,3 +130,26 @@ def remove_control_characters(text):
 
     """
     return re.sub(r'[\x00-\x1F\x7F]', '', text)
+
+
+def extract_domain(email):
+    """
+    メールアドレスからドメインを抽出
+
+    Args:
+        email:
+
+    Returns:
+
+    """
+    # メールアドレスの正規表現パターン
+    email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+
+    # メールアドレスが正しい形式かどうかをチェック
+    if not re.match(email_regex, email):
+        return email
+
+    # '@'のインデックスを取得し、ドメインを抽出
+    at_index = email.index('@')
+    domain = email[at_index + 1:]
+    return domain

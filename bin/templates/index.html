@@ -11,56 +11,27 @@
 
     <script>
         $(function(){
-            $('#poster_all_sel').click(function() {
-                $('input[name^="poster_list"]').prop('checked', true);
+            $('#sender_all_sel').click(function() {
+                $('input[name^="sender_list"]').prop('checked', true);
                 return false;
             });
 
-            $('#poster_all_desel').click(function() {
-                $('input[name^="poster_list"]').prop('checked', false);
+            $('#sender_all_desel').click(function() {
+                $('input[name^="sender_list"]').prop('checked', false);
                 return false;
             });
 
-            $('#public_channel_all_sel').click(function() {
-                $('input[name^="public_channel_list"]').prop('checked', true);
+            $('#folder_all_sel').click(function() {
+                $('input[name^="folder_list"]').prop('checked', true);
                 return false;
             });
 
-            $('#public_channel_all_desel').click(function() {
-                $('input[name^="public_channel_list"]').prop('checked', false);
+            $('#folder_all_desel').click(function() {
+                $('input[name^="folder_list"]').prop('checked', false);
                 return false;
             });
 
-            $('#private_channel_all_sel').click(function() {
-                $('input[name^="private_channel_list"]').prop('checked', true);
-                return false;
-            });
-
-            $('#private_channel_all_desel').click(function() {
-                $('input[name^="private_channel_list"]').prop('checked', false);
-                return false;
-            });
-
-            $('#im_channel_all_sel').click(function() {
-                $('input[name^="im_channel_list"]').prop('checked', true);
-                return false;
-            });
-
-            $('#im_channel_all_desel').click(function() {
-                $('input[name^="im_channel_list"]').prop('checked', false);
-                return false;
-            });
-
-            $('#mpim_channel_all_sel').click(function() {
-                $('input[name^="mpim_channel_list"]').prop('checked', true);
-                return false;
-            });
-
-            $('#mpim_channel_all_desel').click(function() {
-                $('input[name^="mpim_channel_list"]').prop('checked', false);
-                return false;
-            });
-        });
+       });
 
     </script>
 </head>
@@ -97,33 +68,17 @@
                     {{ form.search_to_date }}
                 </td>
             </tr>
-            <!--
             <tr>
-                <th>
-                    宛先<br>
-                    <button id="mail_to_all_sel">全選択</button>
-                    <button id="mail_to_all_desel">全解除</button>
-                </th>
-                <td>
-                    <div class="checkbox-grid">
-                        {% for to in form.to_list %}
-                            <div class="checkbox-item">
-                                <label class="checkbox-label">
-                                    {{ to.checked(value=to.item_id.data) }} <span>{{ to.label.data }}</span>
-                                    {{ to.item_id() }}
-                                </label>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </td>
-            </tr>
-            -->
-            <tr>
-                <th>
+                <th rowspan="2">
                     差出人<br>
                     <button id="sender_all_sel">全選択</button>
                     <button id="sender_all_desel">全解除</button>
                 </th>
+                <td>
+                    {{ form.sender_input }}&nbsp;「;」区切りで複数指定可能
+                </td>
+            </tr>
+            <tr>
                 <td>
                     <div class="checkbox-grid">
                         {% for sender in form.sender_list %}
@@ -137,6 +92,7 @@
                     </div>
                 </td>
             </tr>
+            <!--
             <tr>
                 <th width="150px">
                     検索場所
@@ -148,6 +104,7 @@
                     {{ form.is_target_send.label }}
                 </td>
             </tr>
+            -->
             <tr>
                 <th>
                     受信ボックス<br>

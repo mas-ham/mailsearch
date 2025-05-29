@@ -1,7 +1,7 @@
 """
 dataaccess：tr_mail_messages
 
-create 2025/05/28 hamada
+create 2025/05/29 hamada
 """
 from dataaccess.common.base_dataaccess import BaseDataAccess
 from dataaccess.entity.tr_mail_messages import TrMailMessages
@@ -18,6 +18,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
             'store_id',
             'received',
             'sender',
+            'sender_name',
             'to_email',
             'cc_email',
             'subject',
@@ -41,7 +42,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         results = self.execute_select(TABLE_ID, conditions, order_by_list)
         if results.empty:
             return []
-        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for _, row in results.iterrows()]
+        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['sender_name'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for _, row in results.iterrows()]
 
 
     def select_by_pk(self, entry_id, store_id) -> TrMailMessages | None:
@@ -58,7 +59,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         results = self.execute_select_by_pk(TABLE_ID, entry_id = entry_id, store_id = store_id)
         if results.empty:
             return None
-        return TrMailMessages(results.iat[0, 0], results.iat[0, 1], results.iat[0, 2], results.iat[0, 3], results.iat[0, 4], results.iat[0, 5], results.iat[0, 6], results.iat[0, 7], results.iat[0, 8])
+        return TrMailMessages(results.iat[0, 0], results.iat[0, 1], results.iat[0, 2], results.iat[0, 3], results.iat[0, 4], results.iat[0, 5], results.iat[0, 6], results.iat[0, 7], results.iat[0, 8], results.iat[0, 9])
 
 
     def select_all(self, order_by_list = None) -> list[TrMailMessages]:
@@ -74,7 +75,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         results = self.execute_select_all(TABLE_ID, order_by_list)
         if results.empty:
             return []
-        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for _, row in results.iterrows()]
+        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['sender_name'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for _, row in results.iterrows()]
 
 
     def insert(self, entity: TrMailMessages) -> int:
@@ -92,6 +93,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
             entity.store_id,
             entity.received,
             entity.sender,
+            entity.sender_name,
             entity.to_email,
             entity.cc_email,
             entity.subject,
@@ -119,6 +121,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
                     entity.store_id,
                     entity.received,
                     entity.sender,
+                    entity.sender_name,
                     entity.to_email,
                     entity.cc_email,
                     entity.subject,
@@ -146,6 +149,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
             'store_id': entity.store_id,
             'received': entity.received,
             'sender': entity.sender,
+            'sender_name': entity.sender_name,
             'to_email': entity.to_email,
             'cc_email': entity.cc_email,
             'subject': entity.subject,
@@ -176,6 +180,8 @@ class TrMailMessagesDataAccess(BaseDataAccess):
             update_info['received'] = entity.received
         if entity.sender is not None:
             update_info['sender'] = entity.sender
+        if entity.sender_name is not None:
+            update_info['sender_name'] = entity.sender_name
         if entity.to_email is not None:
             update_info['to_email'] = entity.to_email
         if entity.cc_email is not None:
@@ -209,6 +215,8 @@ class TrMailMessagesDataAccess(BaseDataAccess):
             key_map['received'] = key.received
         if key.sender is not None:
             key_map['sender'] = key.sender
+        if key.sender_name is not None:
+            key_map['sender_name'] = key.sender_name
         if key.to_email is not None:
             key_map['to_email'] = key.to_email
         if key.cc_email is not None:

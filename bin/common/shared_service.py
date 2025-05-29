@@ -157,56 +157,6 @@ def split_code_name(val: str):
     return val, ''
 
 
-def convert_to_excel_data(row_list):
-    """
-    Excelへの返却用に形式を変換する
-    dictのリストをパラメーターとして指定する
-    dictのキー:column_listに格納されているデータをcolumnXとして格納しなおす
-    各行データの列数を算出してdictに追加する
-
-    Args:
-        row_list:
-
-    Returns:
-        dict {'record_count', 'excel_data', 'column_count'}
-
-    """
-    result_list = []
-    max_column_count = 0
-    for row_data in row_list:
-        result = {}
-
-        # 列情報を取出し
-        column_list = row_data[const.KEY_COLUMN_LIST]
-        i = 1
-        for col_data in column_list:
-            result[f'column{i}'] = empty_to_none(col_data)
-            i += 1
-
-        # 元々のキー情報を移管
-        for key in row_data:
-            if key == const.KEY_COLUMN_LIST:
-                continue
-            result[key] = row_data.get(key)
-
-        # エントリー数
-        column_count = len(column_list)
-        result['count'] = column_count
-
-        # 1行あたりの列数の最大値を算出
-        if column_count > max_column_count:
-            max_column_count = column_count
-
-        # リストに格納
-        result_list.append(result)
-
-    return {
-        'record_count': len(result_list),
-        'excel_data': result_list,
-        'column_count': max_column_count,
-    }
-
-
 def ignore_user_warning():
     """
     入力規則のあるExcelを読み込む時のWarningを無視する
