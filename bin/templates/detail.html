@@ -1,12 +1,12 @@
 <!--
-    Slack検索：詳細画面
+    メール検索：詳細画面
 -->
 <!DOCTYPE html>
 <html>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <head>
     <title>Detail</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/slack_app.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mailsearch.css') }}" type="text/css">
 
     <script>
         $(function(){
@@ -20,59 +20,52 @@
     <table width="98%">
         <tr>
             <th width="10%">
-                {{ form.post_date.label }}
+                {{ form.received.label }}
             </th>
             <td width="90%">
-                {{ form.post_date.data }}
+                {{ form.received.data }}
             </td>
         </tr>
         <tr>
             <th>
-                {{ form.post_name.label }}
+                {{ form.sender.label }}
             </th>
             <td>
-                <img src="{{ form.post_icon.data }}" />
-                {{ form.post_name.data }}
+                {{ form.sender.data }}
             </td>
         </tr>
         <tr>
             <th>
-                {{ form.post_message.label }}
+                {{ form.to_email.label }}
             </th>
             <td>
-                <div style="white-space:pre-wrap; word-break:break-all">{{ form.post_message.data|safe }}</div>
+                {{ form.to_email.data }}
             </td>
         </tr>
-    </table>
-    <br>
-    <table border="1" width="98%">
         <tr>
-            <th width="10%">
-                返信者
+            <th>
+                {{ form.cc_email.label }}
             </th>
-            <th width="12%">
-                返信日
-            </th>
-            <th width="78%">
-                メッセージ
-            </th>
+            <td>
+                {{ form.cc_email.data }}
+            </td>
         </tr>
-        {% for record in result_list %}
-            <tr>
-                <td>
-                    {% if record.reply_name != '' %}
-                        <img src="{{ record.reply_icon }}" />
-                    {% endif %}
-                    {{ record.reply_name }}
-                </td>
-                <td>
-                    {{ record.reply_date }}
-                </td>
-                <td>
-                    <div style="white-space:pre-wrap; word-break:break-all">{{ record.reply_message|safe }}</div>
-                </td>
-            </tr>
-        {% endfor %}
+        <tr>
+            <th>
+                {{ form.subject.label }}
+            </th>
+            <td>
+                <div style="white-space:pre-wrap; word-break:break-all">{{ form.subject.data|safe }}</div>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                {{ form.body.label }}
+            </th>
+            <td>
+                <div style="white-space:pre-wrap; word-break:break-all">{{ form.body.data|safe }}</div>
+            </td>
+        </tr>
     </table>
 </body>
 </html>

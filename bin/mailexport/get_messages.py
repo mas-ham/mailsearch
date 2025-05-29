@@ -57,6 +57,7 @@ class GetMessages:
 
             conn.commit()
 
+
     def _search_folder(self, conn, folder, folder_id, oldest, latest):
         """
         Outlookメールを取得し登録する

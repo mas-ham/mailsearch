@@ -22,17 +22,21 @@ class MailSearchModel:
     folder_list: list = None
 
 @dataclasses.dataclass
-class SlackDetailModel:
-    channel_type: str = ''
-    channel_name: str = ''
-    post_date: str = ''
+class MailDetailModel:
+    entry_id: str = ''
+    store_id: str = ''
     search_val: str = ''
     search_val_list: list = None
 
 @dataclasses.dataclass
-class SlackResultModel:
-    post_date: str = ''
-    post_icon: str = ''
-    post_name: str = ''
-    post_message: str = ''
-    result_list: list = None
+class MailResultModel:
+    entry_id: str = ''
+    store_id: str = ''
+    folder_path: str = ''
+    received: str = ''
+    sender: str = ''
+    sender_name: str = ''
+    to_email: str = ''
+    cc_email: str = ''
+    subject: str = ''
+    body: str = ''

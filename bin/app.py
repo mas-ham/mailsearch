@@ -3,9 +3,9 @@ import re
 
 from flask import Flask, render_template, redirect, url_for, request
 from flask_wtf import FlaskForm
-from wtforms import Form, StringField, DateField, RadioField, BooleanField, FieldList, FormField, HiddenField, SubmitField
+from wtforms import Form, StringField, TextAreaField, DateField, RadioField, BooleanField, FieldList, FormField, HiddenField, SubmitField
 
-from common import const, sql_shared_service
+from common import sql_shared_service
 from app_common import app_shared_service
 from mailsearch import search_message, search_settings, models
 
@@ -55,9 +55,8 @@ class MailSearchResultForm(FlaskForm):
     """
     search_val = HiddenField()
     data_count = StringField()
-    channel_type = HiddenField()
-    channel_name = HiddenField()
-    post_date = HiddenField()
+    entry_id = HiddenField()
+    store_id = HiddenField()
 
 
 class MailSearchDetailForm(FlaskForm):
@@ -65,12 +64,12 @@ class MailSearchDetailForm(FlaskForm):
     詳細画面用Form
     """
     search_val = HiddenField()
-    send_date = StringField('送信日')
-    mail_from = StringField('FROM')
-    mail_to = StringField('TO')
-    mail_xx = StringField('CC')
-    title = StringField('件名')
-    body = StringField('本文')
+    received = StringField('送信日')
+    sender = StringField('FROM')
+    to_email = StringField('TO')
+    cc_email = StringField('CC')
+    subject = StringField('件名')
+    body = TextAreaField('本文')
 
 
 class SettingsForm(FlaskForm):
@@ -130,7 +129,7 @@ def search():
     model = _convert_search_model(form)
 
     with sql_shared_service.get_connection(root_dir) as conn:
-        result_list = search_message.search(conn, root_dir, model)
+        result_list = search_message.search(conn, model)
     # print(result_list)
 
     result_form = MailSearchResultForm()
@@ -140,29 +139,28 @@ def search():
     return render_template('result.html', form=result_form, result_list=result_list)
 
 
-# @app.route('/detail', methods=['POST'])
-# def detail():
-#     """
-#     詳細
-#
-#     Returns:
-#
-#     """
-#     form = SlackSearchResultForm(request.form)
-#     model = _convert_detail_model(form)
-#     result = search_message.get_detail(root_dir, model)
-#
-#     # アイコンを設定
-#     for record in result.result_list:
-#         record['reply_icon'] = url_for('static', filename=f'icon/{record["reply_name"]}.jpg')
-#
-#     detail_form = SlackSearchDetailForm()
-#     detail_form.post_date.data = result.post_date
-#     detail_form.post_icon.data = url_for('static', filename=f'icon/{result.post_name}.jpg')
-#     detail_form.post_name.data = result.post_name
-#     detail_form.post_message.data = result.post_message
-#
-#     return render_template('detail.html', form=detail_form, result_list=result.result_list)
+@app.route('/detail', methods=['POST'])
+def detail():
+    """
+    詳細
+
+    Returns:
+
+    """
+    form = MailSearchResultForm(request.form)
+    model = _convert_detail_model(form)
+    result = search_message.get_detail(root_dir, model)
+
+    detail_form = MailSearchDetailForm()
+    detail_form.received.data = result.received
+    detail_form.folder_path = result.folder_path
+    detail_form.sender = result.sender if result.sender == result.sender_name else f'{result.sender_name}<{result.sender}>'
+    detail_form.to_email = result.to_email
+    detail_form.cc_email = result.cc_email
+    detail_form.subject = result.subject
+    detail_form.body = result.body
+
+    return render_template('detail.html', form=detail_form)
 
 
 @app.route('/settings')
@@ -221,23 +219,20 @@ def _convert_search_model(form: MailSearchForm) -> models.MailSearchModel:
         [entry.item_id.data for entry in form.folder_list if entry.checked.data],
     )
 
-# def _convert_detail_model(form: SlackSearchResultForm) -> models.SlackDetailModel:
-#     """
-#     詳細用モデルへマッピング
-#
-#     Args:
-#         form:
-#
-#     Returns:
-#
-#     """
-#     return models.SlackDetailModel(
-#         form.channel_type.data,
-#         form.channel_name.data,
-#         form.post_date.data,
-#         form.search_val.data,
-#         re.split(r'[ 　]+', form.search_val.data),
-#     )
+def _convert_detail_model(form: MailSearchResultForm) -> models.MailDetailModel:
+    """
+    詳細用モデルへマッピング
+
+    Args:
+        form:
+
+    Returns:
+
+    """
+    return models.MailDetailModel(
+        form.entry_id.data,
+        form.store_id.data,
+    )
 
 
 if __name__ == "__main__":

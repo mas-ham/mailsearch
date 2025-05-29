@@ -10,10 +10,9 @@
 
     <script>
         // 詳細画面を開く
-        function openDetail(channel_type, channel_name, post_date) {
-            $('#channel_type').val(channel_type);
-            $('#channel_name').val(channel_name);
-            $('#post_date').val(post_date);
+        function openDetail(entry_id, store_id) {
+            $('#entry_id').val(entry_id);
+            $('#store_id').val(store_id);
             $('#form').submit()
         }
 
@@ -32,7 +31,7 @@
             <th width="5%">
                 詳細
             </th>
-            <th width="7%">
+            <th width="10%">
                 受信ボックス
             </th>
             <th width="10%">
@@ -41,17 +40,20 @@
             <th width="12%">
                 送信日時
             </th>
-            <th width="66%">
+            <th width="63%">
                 件名
             </th>
             <th style="display:none">
                 entry_id
             </th>
+            <th style="display:none">
+                store_id
+            </th>
         </tr>
         {% for record in result_list %}
             <tr>
                 <td>
-                    <button onclick="javascript: openDetail('{{ record.channel_type }}', '{{ record.channel_name }}', '{{ record.post_date }}')">詳細</button>
+                    <button onclick="javascript: openDetail('{{ record.entry_id }}', '{{ record.store_id }}')">詳細</button>
                 </td>
                 <td>
                     {{ record.folder_path }}
@@ -67,6 +69,9 @@
                 </td>
                 <td style="display:none">
                     {{ record.entry_id }}
+                </td>
+                <td style="display:none">
+                    {{ record.store_id }}
                 </td>
             </tr>
         {% endfor %}
