@@ -12,6 +12,29 @@
         $(function(){
         });
 
+        function saveClipboard(val) {
+            // クリップボードAPIを使用してコピー
+            navigator.clipboard.writeText(val.trim()).then(function() {
+            }).catch(function(error) {
+                console.error('コピーに失敗しました:', error);
+            });
+        }
+        function copySender() {
+            saveClipboard($('#sender').text())
+        }
+        function copyToEmail() {
+            saveClipboard($('#toEmail').text())
+        }
+        function copyCcEmail() {
+            saveClipboard($('#ccEmail').text())
+        }
+        function copySubject() {
+            saveClipboard($('#subject').text())
+
+        }
+        function copyBody() {
+            saveClipboard($('#body').text())
+        }
     </script>
 </head>
 <body>
@@ -29,41 +52,52 @@
         <tr>
             <th>
                 {{ form.sender.label }}
+                <button id="copySender" onclick="javascript: copySender()" >コピー</button>
             </th>
             <td>
-                {{ form.sender.data }}
+                <div id="sender">
+                    {{ form.sender.data }}
+                </div>
             </td>
         </tr>
         <tr>
             <th>
                 {{ form.to_email.label }}
+                <button id="copyToEmail" onclick="javascript: copyToEmail()" >コピー</button>
             </th>
             <td>
-                {{ form.to_email.data }}
+                <div id="toEmail">
+                    {{ form.to_email.data }}
+                </div>
             </td>
         </tr>
         <tr>
             <th>
                 {{ form.cc_email.label }}
+                <button id="copyCcEmail" onclick="javascript: copyCcEmail()" >コピー</button>
             </th>
             <td>
-                {{ form.cc_email.data }}
+                <div id="ccEmail">
+                    {{ form.cc_email.data }}
+                </div>
             </td>
         </tr>
         <tr>
             <th>
                 {{ form.subject.label }}
+                <button id="copySubject" onclick="javascript: copySubject()" >コピー</button>
             </th>
             <td>
-                <div style="white-space:pre-wrap; word-break:break-all">{{ form.subject.data|safe }}</div>
+                <div style="white-space:pre-wrap; word-break:break-all" id="subject">{{ form.subject.data|safe }}</div>
             </td>
         </tr>
         <tr>
             <th>
                 {{ form.body.label }}
+                <button id="copyBody" onclick="javascript: copyBody()" >コピー</button>
             </th>
             <td>
-                <div style="white-space:pre-wrap; word-break:break-all">{{ form.body.data|safe }}</div>
+                <div style="white-space:pre-wrap; word-break:break-all" id="body">{{ form.body.data|safe }}</div>
             </td>
         </tr>
     </table>

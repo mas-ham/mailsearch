@@ -3,8 +3,6 @@
 
 create 2025/05/24 hamada
 """
-import re
-
 import pythoncom
 import win32com.client
 
@@ -36,14 +34,12 @@ def get_folder_list(conn):
 
     def search_folder(folder, folder_path=""):
         current_path = f"{folder_path}\\{folder.Name}" if folder_path else folder.Name
-        # print(current_path)
 
         # データがなければInsert
         _insert_if_not_exists_folder(conn, current_path)
 
         # 現在データを取得
         target_folder = _get_folder_by_path(conn, current_path)
-        # print(target_folder.folder_id)
 
         folder_list.append({
             'folder_id': target_folder.folder_id,
@@ -88,8 +84,6 @@ def get_sender_list(conn):
         })
 
     return sorted(sender_list, key=lambda x: (x['domain'], x['email_address']))
-
-
 
 
 def _insert_if_not_exists_folder(conn, folder_path):
@@ -208,7 +202,6 @@ def regist(conn, is_target_selected, is_sender_display_selected, is_sender_check
             entity.is_display = record['is_display']
             entity.is_checked = record['is_checked']
             target_sender_dataaccess.insert(entity)
-
 
 
 def _get_sender_id_by_email_address(sender_list: list[TargetSender], email_address):

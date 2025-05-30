@@ -30,7 +30,7 @@ SQL_SEARCH = (
           1 = 1
     {}
     ORDER BY
-        mail.received
+        mail.received DESC
       , folder.folder_path
     """
 )
@@ -49,45 +49,6 @@ class SearchDataaccess:
         Returns:
 
         """
-        # SQLを組み立て
-        # sql_where = ''
-        # params = []
-        # if model.folder_list:
-        #     # フォルダー
-        #     placeholder_list = ['?' for _ in model.folder_list]
-        #     val_list = [v for v in model.folder_list]
-        #     sql_where += f'      AND mail.folder_id IN ({", ".join(placeholder_list)}) '
-        #     params.extend(val_list)
-        # if model.sender_list:
-        #     # 差出人
-        #     placeholder_list = ['?' for _ in model.sender_list]
-        #     val_list = [v for v in model.sender_list]
-        #     sql_where += f'\n      AND mail.sender IN ({", ".join(placeholder_list)}) '
-        #     params.extend(val_list)
-        # if model.search_val_list:
-        #     # 検索文字列
-        #     search_list = []
-        #     cond = f' AND ' if model.search_type == '01' else ' OR '
-        #     if model.is_target_title:
-        #         list_ = []
-        #         for search_val in model.search_val_list:
-        #             list_.append(f"mail.subject LIKE ?")
-        #             params.append(f'%{search_val}%')
-        #         cond_str = cond.join(list_)
-        #         search_list.append(f'({cond_str})')
-        #         # sql_where += f'\n      AND ({cond_str}) '
-        #     if model.is_target_body:
-        #         list_ = []
-        #         for search_val in model.search_val_list:
-        #             list_.append(f"mail.body LIKE ?")
-        #             params.append(f'%{search_val}%')
-        #         cond_str = cond.join(list_)
-        #         search_list.append(f'({cond_str})')
-        #         # sql_where += f'\n      OR  ({cond_str}) '
-        #
-        #     sql_where += f'\n      AND ({" OR ".join(search_list)}) '
-        # sql = SQL_SEARCH.format(sql_where)
-
         # SQLの組み立て
         sql, params = _create_sql_for_search(model)
 
@@ -96,9 +57,19 @@ class SearchDataaccess:
         cursor = self.conn.cursor()
         cursor.execute(sql, params)
         return cursor.fetchall()
-        # return pd.DataFrame(cursor.fetchall(), columns=['entry_id', 'store_id', 'received', 'sender', 'sender_name', 'to_email', 'cc_email', 'subject', 'body', 'folder_id', 'folder_path'])
+
 
     def detail(self, entry_id, store_id):
+        """
+        詳細
+
+        Args:
+            entry_id:
+            store_id:
+
+        Returns:
+
+        """
         # SQLの組み立て
         sql, params = _create_sql_for_detail(entry_id, store_id)
 
@@ -107,11 +78,18 @@ class SearchDataaccess:
         cursor = self.conn.cursor()
         cursor.execute(sql, params)
         return cursor.fetchone()
-        # results = pd.DataFrame(cursor.fetchone(), columns=['entry_id', 'store_id', 'received', 'sender', 'sender_name', 'to_email', 'cc_email', 'subject', 'body', 'folder_id', 'folder_path'])
-        # return results.iat[0]
 
 
 def _create_sql_for_search(model: MailSearchModel):
+    """
+    SQL組み立て(検索)
+
+    Args:
+        model:
+
+    Returns:
+
+    """
     # SQLを組み立て
     sql_where = ''
     params = []
@@ -130,12 +108,12 @@ def _create_sql_for_search(model: MailSearchModel):
     if model.search_from_date:
         # 期間(From)
         from_date = app_shared_service.convert_from_date(model.search_from_date)
-        sql_where += f'\n      AND mail.sender >= ?'
+        sql_where += f'\n      AND mail.received >= ?'
         params.append(from_date)
     if model.search_to_date:
         # 期間(To)
         to_date = app_shared_service.convert_to_date(model.search_to_date)
-        sql_where += f'\n      AND mail.sender <= ?'
+        sql_where += f'\n      AND mail.received <= ?'
         params.append(to_date)
     if model.search_val_list:
         # 検索文字列
@@ -166,6 +144,16 @@ def _create_sql_for_search(model: MailSearchModel):
 
 
 def _create_sql_for_detail(entry_id, store_id):
+    """
+    SQL組み立て(詳細)
+
+    Args:
+        entry_id:
+        store_id:
+
+    Returns:
+
+    """
     # SQLを組み立て
     sql_where = '      AND mail.entry_id = ? '
     sql_where += '\n      AND mail.store_id = ? '

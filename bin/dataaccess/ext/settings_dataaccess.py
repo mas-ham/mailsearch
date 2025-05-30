@@ -57,9 +57,24 @@ class SettingsDataaccess:
         self.conn = conn
 
     def get_sender_list(self):
+        """
+        差出人一覧を取得
+
+        Returns:
+
+        """
         return pd.read_sql(SQL_GET_SENDER_LIST, self.conn)
 
     def get_sender_name(self, email_address) -> str:
+        """
+        差出人名を取得
+
+        Args:
+            email_address:
+
+        Returns:
+
+        """
         results = pd.read_sql(SQL_GET_SENDER_NAME, self.conn, params=[email_address])
         if results.empty:
             return ''

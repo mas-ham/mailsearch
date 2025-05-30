@@ -86,7 +86,7 @@ def _convert_to_json_for_search(record_list, search_val_list):
     Returns:
 
     """
-    if record_list.empty:
+    if not record_list:
         return []
 
     result_list = []
@@ -97,6 +97,8 @@ def _convert_to_json_for_search(record_list, search_val_list):
             'sender_name': row['sender_name'],
             'received': row['received'],
             'subject': _add_highlights(row['subject'], search_val_list),
+            'entry_id': row['entry_id'],
+            'store_id': row['store_id'],
         })
 
     return result_list
@@ -124,8 +126,8 @@ def get_detail(conn, model: MailDetailModel) -> MailResultModel:
     result.sender_name = record['sender_name']
     result.to_email = record['to_email']
     result.cc_email = record['cc_email']
-    result.subject = record['subject']
-    result.body = record['body']
+    result.subject = _add_highlights(record['subject'], model.search_val_list)
+    result.body = _add_highlights(record['body'], model.search_val_list)
 
     return result
 

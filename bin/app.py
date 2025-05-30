@@ -65,6 +65,7 @@ class MailSearchDetailForm(FlaskForm):
     """
     search_val = HiddenField()
     received = StringField('送信日')
+    folder_path = StringField('受信ボックス')
     sender = StringField('FROM')
     to_email = StringField('TO')
     cc_email = StringField('CC')
@@ -149,16 +150,17 @@ def detail():
     """
     form = MailSearchResultForm(request.form)
     model = _convert_detail_model(form)
-    result = search_message.get_detail(root_dir, model)
+    with sql_shared_service.get_connection(root_dir) as conn:
+        result = search_message.get_detail(conn, model)
 
     detail_form = MailSearchDetailForm()
     detail_form.received.data = result.received
-    detail_form.folder_path = result.folder_path
-    detail_form.sender = result.sender if result.sender == result.sender_name else f'{result.sender_name}<{result.sender}>'
-    detail_form.to_email = result.to_email
-    detail_form.cc_email = result.cc_email
-    detail_form.subject = result.subject
-    detail_form.body = result.body
+    detail_form.folder_path.data = result.folder_path
+    detail_form.sender.data = result.sender if result.sender == result.sender_name else f'{result.sender_name}<{result.sender}>'
+    detail_form.to_email.data = result.to_email
+    detail_form.cc_email.data = result.cc_email
+    detail_form.subject.data = result.subject
+    detail_form.body.data = result.body
 
     return render_template('detail.html', form=detail_form)
 
@@ -232,6 +234,8 @@ def _convert_detail_model(form: MailSearchResultForm) -> models.MailDetailModel:
     return models.MailDetailModel(
         form.entry_id.data,
         form.store_id.data,
+        form.search_val.data,
+        re.split(r'[ 　]+', form.search_val.data) if form.search_val.data else [],
     )
 
 
