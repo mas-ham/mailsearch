@@ -1,7 +1,7 @@
 """
 Entity：target_sender
 
-create 2025/05/28 hamada
+create 2025/06/02 hamada
 """
 import dataclasses
 

@@ -1,7 +1,7 @@
 """
 Entity：target_folder
 
-create 2025/05/31 hamada
+create 2025/06/02 hamada
 """
 import dataclasses
 

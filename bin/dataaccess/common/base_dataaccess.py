@@ -1,9 +1,10 @@
 """
 データアクセス層共通クラス
 
-create 2024/03/29 TIS hamada
+create 2024/03/29 hamada
+update 2025/06/02 hamada
 """
-import pandas as pd
+import sqlite3
 
 from common import shared_service
 
@@ -41,8 +42,10 @@ class BaseDataAccess:
     """
     def __init__(self, conn):
         self.conn = conn
+        self.conn.row_factory = sqlite3.Row
 
-    def execute_select(self, table_id, conditions: list, order_by_list: list | None) -> pd.DataFrame:
+
+    def execute_select(self, table_id, conditions: list, order_by_list: list | None):
         """
         Select
 
@@ -93,7 +96,9 @@ class BaseDataAccess:
         query = SQL_SELECT.format(table_id, " AND ".join(where_list), _set_order_by(order_by_list))
         if IS_EXPORT_SQL_LOG:
             _write_sql_log(query, params)
-        return pd.read_sql(query, self.conn, params=params)
+        cursor = self.conn.cursor()
+        cursor.execute(query, params)
+        return cursor.fetchall()
 
 
     def execute_select_by_pk(self, table_id, **kwargs):
@@ -115,7 +120,9 @@ class BaseDataAccess:
         query = SQL_SELECT_BY_PK.format(table_id, " AND ".join(where_list))
         if IS_EXPORT_SQL_LOG:
             _write_sql_log(query, params)
-        return pd.read_sql(query, self.conn, params=params)
+        cursor = self.conn.cursor()
+        cursor.execute(query, params)
+        return cursor.fetchone()
 
 
     def execute_select_all(self, table_id, order_by_list: list):
@@ -132,7 +139,9 @@ class BaseDataAccess:
         query = SQL_SELECT_ALL.format(table_id, _set_order_by(order_by_list))
         if IS_EXPORT_SQL_LOG:
             _write_sql_log(query)
-        return pd.read_sql(query, self.conn)
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        return cursor.fetchall()
 
 
     def execute_insert(self, table_id, column_id_list, params):

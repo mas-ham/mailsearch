@@ -2,7 +2,7 @@
 メール検索設定用dataaccess
 
 """
-import pandas as pd
+import sqlite3
 
 # 差出人一覧を取得
 SQL_GET_SENDER_LIST = (
@@ -63,7 +63,11 @@ class SettingsDataaccess:
         Returns:
 
         """
-        return pd.read_sql(SQL_GET_SENDER_LIST, self.conn)
+        self.conn.row_factory = sqlite3.Row
+        cursor = self.conn.cursor()
+        cursor.execute(SQL_GET_SENDER_LIST)
+        return cursor.fetchall()
+
 
     def get_sender_name(self, email_address) -> str:
         """
@@ -75,9 +79,9 @@ class SettingsDataaccess:
         Returns:
 
         """
-        results = pd.read_sql(SQL_GET_SENDER_NAME, self.conn, params=[email_address])
-        if results.empty:
-            return ''
+        self.conn.row_factory = sqlite3.Row
+        cursor = self.conn.cursor()
+        cursor.execute(SQL_GET_SENDER_NAME, params=[email_address])
+        result =  cursor.fetchone()
 
-        return results.iloc[0, 0]
-
+        return result['sender_name'] if result is not None else ''

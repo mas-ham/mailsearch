@@ -1,7 +1,7 @@
 """
 dataaccess：tr_mail_messages
 
-create 2025/05/29 hamada
+create 2025/06/02 hamada
 """
 from dataaccess.common.base_dataaccess import BaseDataAccess
 from dataaccess.entity.tr_mail_messages import TrMailMessages
@@ -40,9 +40,9 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         """
 
         results = self.execute_select(TABLE_ID, conditions, order_by_list)
-        if results.empty:
+        if not results:
             return []
-        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['sender_name'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for _, row in results.iterrows()]
+        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['sender_name'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for row in results]
 
 
     def select_by_pk(self, entry_id, store_id) -> TrMailMessages | None:
@@ -56,10 +56,10 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         Returns:
 
         """
-        results = self.execute_select_by_pk(TABLE_ID, entry_id = entry_id, store_id = store_id)
-        if results.empty:
+        result = self.execute_select_by_pk(TABLE_ID, entry_id = entry_id, store_id = store_id)
+        if result is None:
             return None
-        return TrMailMessages(results.iat[0, 0], results.iat[0, 1], results.iat[0, 2], results.iat[0, 3], results.iat[0, 4], results.iat[0, 5], results.iat[0, 6], results.iat[0, 7], results.iat[0, 8], results.iat[0, 9])
+        return TrMailMessages(result['entry_id'], result['store_id'], result['received'], result['sender'], result['sender_name'], result['to_email'], result['cc_email'], result['subject'], result['body'], result['folder_id'])
 
 
     def select_all(self, order_by_list = None) -> list[TrMailMessages]:
@@ -75,7 +75,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         results = self.execute_select_all(TABLE_ID, order_by_list)
         if results.empty:
             return []
-        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['sender_name'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for _, row in results.iterrows()]
+        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['sender_name'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for row in results]
 
 
     def insert(self, entity: TrMailMessages) -> int:

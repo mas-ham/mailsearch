@@ -1,7 +1,7 @@
 """
 検索条件設定モデル
 
-create 2024/03/29 TIS hamada
+create 2024/03/29 hamada
 """
 import dataclasses
 

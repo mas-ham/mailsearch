@@ -1,7 +1,7 @@
 """
 dataaccess：target_folder
 
-create 2025/05/31 hamada
+create 2025/06/02 hamada
 """
 from dataaccess.common.base_dataaccess import BaseDataAccess
 from dataaccess.entity.target_folder import TargetFolder
@@ -33,9 +33,9 @@ class TargetFolderDataAccess(BaseDataAccess):
         """
 
         results = self.execute_select(TABLE_ID, conditions, order_by_list)
-        if results.empty:
+        if not results:
             return []
-        return [TargetFolder(row['folder_id'], row['folder_path'], row['folder_type'], row['is_target']) for _, row in results.iterrows()]
+        return [TargetFolder(row['folder_id'], row['folder_path'], row['folder_type'], row['is_target']) for row in results]
 
 
     def select_by_pk(self, folder_id) -> TargetFolder | None:
@@ -48,10 +48,10 @@ class TargetFolderDataAccess(BaseDataAccess):
         Returns:
 
         """
-        results = self.execute_select_by_pk(TABLE_ID, folder_id = folder_id)
-        if results.empty:
+        result = self.execute_select_by_pk(TABLE_ID, folder_id = folder_id)
+        if result is None:
             return None
-        return TargetFolder(results.iat[0, 0], results.iat[0, 1], results.iat[0, 2], results.iat[0, 3])
+        return TargetFolder(result['folder_id'], result['folder_path'], result['folder_type'], result['is_target'])
 
 
     def select_all(self, order_by_list = None) -> list[TargetFolder]:
@@ -67,7 +67,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         results = self.execute_select_all(TABLE_ID, order_by_list)
         if results.empty:
             return []
-        return [TargetFolder(row['folder_id'], row['folder_path'], row['folder_type'], row['is_target']) for _, row in results.iterrows()]
+        return [TargetFolder(row['folder_id'], row['folder_path'], row['folder_type'], row['is_target']) for row in results]
 
 
     def insert(self, entity: TargetFolder) -> int:

@@ -1,7 +1,7 @@
 """
 Entity：tr_mail_messages
 
-create 2025/05/29 hamada
+create 2025/06/02 hamada
 """
 import dataclasses
 

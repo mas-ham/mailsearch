@@ -164,9 +164,9 @@ def _create_dataaccess_select(table_id, column_list, pk_list, all_list):
     s.append(f'        """')
     s.append(f'')
     s.append(f'        results = self.execute_select(TABLE_ID, conditions, order_by_list)')
-    s.append(f'        if results.empty:')
+    s.append(f'        if not results:')
     s.append(f'            return []')
-    s.append(f'        return [{camel_table_id}({", ".join(row_list)}) for _, row in results.iterrows()]')
+    s.append(f'        return [{camel_table_id}({", ".join(row_list)}) for row in results]')
     s.append(f'')
     s.append(f'')
 
@@ -210,8 +210,8 @@ def _create_dataaccess_select_by_pk(table_id, column_list, pk_list, all_list):
         pk_params.append(f'{column_id} = {column_id}')
     pk_param = ', '.join(pk_params)
     row_list = []
-    for i in range(0, len(all_list)):
-        row_list.append(f"results.iat[0, {i}]")
+    for column_id in all_list:
+        row_list.append(f"result['{column_id}']")
     s = list()
     # Select_by_PK
     s.append(f'    def select_by_pk(self, {", ".join(pk_list)}) -> {camel_table_id} | None:')
@@ -225,8 +225,8 @@ def _create_dataaccess_select_by_pk(table_id, column_list, pk_list, all_list):
     s.append(f'        Returns:')
     s.append(f'')
     s.append(f'        """')
-    s.append(f'        results = self.execute_select_by_pk(TABLE_ID, {pk_param})')
-    s.append(f'        if results.empty:')
+    s.append(f'        result = self.execute_select_by_pk(TABLE_ID, {pk_param})')
+    s.append(f'        if result is None:')
     s.append(f'            return None')
     s.append(f'        return {camel_table_id}({", ".join(row_list)})')
     s.append(f'')
@@ -260,7 +260,7 @@ def _create_dataaccess_select_all(table_id, column_list, pk_list, all_list):
     s.append(f'        results = self.execute_select_all(TABLE_ID, order_by_list)')
     s.append(f'        if results.empty:')
     s.append(f'            return []')
-    s.append(f'        return [{camel_table_id}({", ".join(row_list)}) for _, row in results.iterrows()]')
+    s.append(f'        return [{camel_table_id}({", ".join(row_list)}) for row in results]')
     s.append(f'')
     s.append(f'')
 

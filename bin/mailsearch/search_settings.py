@@ -76,7 +76,7 @@ def get_sender_list(conn):
     all_sender_list = settings_dataaccess.get_sender_list()
 
     sender_list = []
-    for _, row in all_sender_list.iterrows():
+    for row in all_sender_list:
         sender_list.append({
             # 'sender_id': row['sender_id'],
             'domain': app_shared_service.extract_domain(row['email_address']),
