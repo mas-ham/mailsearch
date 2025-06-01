@@ -1,7 +1,7 @@
 """
 dataaccess：target_folder
 
-create 2025/05/28 hamada
+create 2025/05/31 hamada
 """
 from dataaccess.common.base_dataaccess import BaseDataAccess
 from dataaccess.entity.target_folder import TargetFolder
@@ -15,6 +15,7 @@ class TargetFolderDataAccess(BaseDataAccess):
 
         self.col_list = [
             'folder_path',
+            'folder_type',
             'is_target',
         ]
 
@@ -34,7 +35,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         results = self.execute_select(TABLE_ID, conditions, order_by_list)
         if results.empty:
             return []
-        return [TargetFolder(row['folder_id'], row['folder_path'], row['is_target']) for _, row in results.iterrows()]
+        return [TargetFolder(row['folder_id'], row['folder_path'], row['folder_type'], row['is_target']) for _, row in results.iterrows()]
 
 
     def select_by_pk(self, folder_id) -> TargetFolder | None:
@@ -50,7 +51,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         results = self.execute_select_by_pk(TABLE_ID, folder_id = folder_id)
         if results.empty:
             return None
-        return TargetFolder(results.iat[0, 0], results.iat[0, 1], results.iat[0, 2])
+        return TargetFolder(results.iat[0, 0], results.iat[0, 1], results.iat[0, 2], results.iat[0, 3])
 
 
     def select_all(self, order_by_list = None) -> list[TargetFolder]:
@@ -66,7 +67,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         results = self.execute_select_all(TABLE_ID, order_by_list)
         if results.empty:
             return []
-        return [TargetFolder(row['folder_id'], row['folder_path'], row['is_target']) for _, row in results.iterrows()]
+        return [TargetFolder(row['folder_id'], row['folder_path'], row['folder_type'], row['is_target']) for _, row in results.iterrows()]
 
 
     def insert(self, entity: TargetFolder) -> int:
@@ -81,6 +82,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         """
         params = (
             entity.folder_path,
+            entity.folder_type,
             entity.is_target,
         )
         return self.execute_insert(TABLE_ID, self.col_list, params)
@@ -101,6 +103,7 @@ class TargetFolderDataAccess(BaseDataAccess):
             params.append(
                 (
                     entity.folder_path,
+                    entity.folder_type,
                     entity.is_target,
                 )
             )
@@ -120,6 +123,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         """
         update_info = {
             'folder_path': entity.folder_path,
+            'folder_type': entity.folder_type,
             'is_target': entity.is_target,
         }
         self.execute_update(TABLE_ID, update_info, folder_id = folder_id)
@@ -139,6 +143,8 @@ class TargetFolderDataAccess(BaseDataAccess):
         update_info = {}
         if entity.folder_path is not None:
             update_info['folder_path'] = entity.folder_path
+        if entity.folder_type is not None:
+            update_info['folder_type'] = entity.folder_type
         if entity.is_target is not None:
             update_info['is_target'] = entity.is_target
 
@@ -160,6 +166,8 @@ class TargetFolderDataAccess(BaseDataAccess):
             key_map['folder_id'] = key.folder_id
         if key.folder_path is not None:
             key_map['folder_path'] = key.folder_path
+        if key.folder_type is not None:
+            key_map['folder_type'] = key.folder_type
         if key.is_target is not None:
             key_map['is_target'] = key.is_target
 

@@ -20,6 +20,7 @@ class MailSearchModel:
     to_list: list = None
     sender_list: list = None
     folder_list: list = None
+    sent_folder_list: list = None
 
 @dataclasses.dataclass
 class MailDetailModel:

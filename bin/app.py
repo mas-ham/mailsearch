@@ -5,7 +5,7 @@ from flask import Flask, render_template, redirect, url_for, request
 from flask_wtf import FlaskForm
 from wtforms import Form, StringField, TextAreaField, DateField, RadioField, BooleanField, FieldList, FormField, HiddenField, SubmitField
 
-from common import sql_shared_service
+from common import const, sql_shared_service
 from app_common import app_shared_service
 from mailsearch import search_message, search_settings, models
 
@@ -42,9 +42,11 @@ class MailSearchForm(FlaskForm):
     search_to_date = DateField(label='')
 
     sender_input = StringField(label='')
-    to_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
     sender_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
     folder_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
+    to_input = StringField(label='')
+    to_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
+    sent_folder_list = FieldList(FormField(CheckboxItemForm), min_entries=0)
 
     search_button = SubmitField('検索', render_kw={'style': 'width: 7em; height: 3em'})
 
@@ -107,9 +109,17 @@ def index():
             if data['is_checked']:
                 entry.checked.data = True
         # 受信フォルダ
-        folder_list = search_message.get_folder_list(conn)
+        folder_list = search_message.get_folder_list(conn, const.INBOX)
         for data in folder_list:
             entry = form.folder_list.append_entry()
+            entry.label.data = data['folder_path']
+            entry.item_id.data = data['folder_id']
+            if data['is_target']:
+                entry.checked.data = True
+        # 送信済フォルダ
+        sent_folder_list = search_message.get_folder_list(conn, const.SENT_BOX)
+        for data in sent_folder_list:
+            entry = form.sent_folder_list.append_entry()
             entry.label.data = data['folder_path']
             entry.item_id.data = data['folder_id']
             if data['is_target']:
@@ -215,10 +225,11 @@ def _convert_search_model(form: MailSearchForm) -> models.MailSearchModel:
         form.search_to_date.data,
         form.is_target_receive.data,
         form.is_target_send.data,
-        [data.strip() for data in form.sender_input.data.split(';')],
+        [data.strip() for data in form.sender_input.data.split(';')] if form.sender_input.data else None,
         [entry.item_id.data for entry in form.to_list if entry.checked.data],
         [entry.item_id.data for entry in form.sender_list if entry.checked.data],
         [entry.item_id.data for entry in form.folder_list if entry.checked.data],
+        [entry.item_id.data for entry in form.sent_folder_list if entry.checked.data],
     )
 
 def _convert_detail_model(form: MailSearchResultForm) -> models.MailDetailModel:
@@ -240,4 +251,4 @@ def _convert_detail_model(form: MailSearchResultForm) -> models.MailDetailModel:
 
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5100, debug=True)
+    app.run(host='127.0.0.1', port=5101, debug=True)

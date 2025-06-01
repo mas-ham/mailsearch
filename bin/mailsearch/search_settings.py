@@ -6,6 +6,7 @@ create 2025/05/24 hamada
 import pythoncom
 import win32com.client
 
+from common import const
 from app_common import app_shared_service
 from dataaccess.common.set_cond_model import Condition
 from dataaccess.general.target_folder_dataaccess import TargetFolderDataAccess
@@ -26,17 +27,13 @@ def get_folder_list(conn):
 
     """
 
-    pythoncom.CoInitialize() # type: ignore
-    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    inbox = outlook.GetDefaultFolder(6)
-
     folder_list = []
 
-    def search_folder(folder, folder_path=""):
+    def search_folder(folder_type, folder, folder_path=""):
         current_path = f"{folder_path}\\{folder.Name}" if folder_path else folder.Name
 
         # データがなければInsert
-        _insert_if_not_exists_folder(conn, current_path)
+        _insert_if_not_exists_folder(conn, current_path, folder_type)
 
         # 現在データを取得
         target_folder = _get_folder_by_path(conn, current_path)
@@ -44,19 +41,25 @@ def get_folder_list(conn):
         folder_list.append({
             'folder_id': target_folder.folder_id,
             'folder_path': current_path,
+            'folder_type': folder_type,
             'is_target': target_folder.is_target,
             'checked': 'checked' if target_folder.is_target else ''
         })
 
         for subfolder in folder.Folders:
-            search_folder(subfolder, current_path)
+            search_folder(folder_type, subfolder, current_path)
 
+    pythoncom.CoInitialize() # type: ignore
+    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
 
-    # 開始：受信トレイから再帰的に検索
-    search_folder(inbox)
+    # 受信トレイから再帰的に検索
+    search_folder(const.INBOX, outlook.GetDefaultFolder(const.INBOX))
+
+    # 送信トレイから再帰的に検索
+    search_folder(const.SENT_BOX, outlook.GetDefaultFolder(const.SENT_BOX))
 
     # フォルダーパスでソートして返却
-    return sorted(folder_list, key=lambda x: x['folder_path'])
+    return sorted(folder_list, key=lambda x: (-x['folder_type'], x['folder_path']))
 
 
 def get_sender_list(conn):
@@ -86,13 +89,14 @@ def get_sender_list(conn):
     return sorted(sender_list, key=lambda x: (x['domain'], x['email_address']))
 
 
-def _insert_if_not_exists_folder(conn, folder_path):
+def _insert_if_not_exists_folder(conn, folder_path, folder_type):
     """
     対象フォルダー管理に存在しないデータを登録する
 
     Args:
         conn:
         folder_path:
+        folder_type:
 
     Returns:
 
@@ -103,6 +107,7 @@ def _insert_if_not_exists_folder(conn, folder_path):
 
     entity = TargetFolder()
     entity.folder_path = folder_path
+    entity.folder_type = folder_type
     entity.is_target = 0
 
     dataaccess = TargetFolderDataAccess(conn)

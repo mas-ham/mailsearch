@@ -9,7 +9,7 @@ import pythoncom
 import win32com.client
 import dateutil
 
-from common import shared_service, sql_shared_service
+from common import const, shared_service, sql_shared_service
 from common.logger.logger import Logger
 from app_common import app_shared_service
 from dataaccess.common.set_cond_model import Condition
@@ -38,27 +38,35 @@ class GetMessages:
         """
         pythoncom.CoInitialize() # type: ignore
         outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-        inbox = outlook.GetDefaultFolder(6)
 
         # 期間を取得
         oldest, latest = self.get_term()
 
+        # 受信ボックス/送信ボックスからメールを取得
         with sql_shared_service.get_connection(self.root_dir) as conn:
             target_folders = _get_target_folders(conn)
 
             for target_folder in target_folders:
-                # フォルダを特定(受信トレイは除く)
-                folder = inbox
-                for subfolder_name in target_folder['folder_path'].split("\\")[1:]:
+                folder_type = target_folder.folder_type
+                # フォルダを特定
+                folder = outlook.GetDefaultFolder(folder_type)
+                for subfolder_name in target_folder.folder_path.split("\\")[1:]:
                     folder = folder.Folders[subfolder_name]
 
                 # 受信トレイから再帰的に検索
-                self._search_folder(conn, folder, target_folder['folder_id'], oldest, latest)
+                self._search_folder(conn, folder, target_folder.folder_id, folder_type, oldest, latest)
 
             conn.commit()
 
+        # 設定ファイル更新
+        # from_dateを当日に更新する
+        if int(self.conf['is_get_messages']) and int(self.conf['is_overwrite_from_date']):
+            json_data = app_shared_service.get_conf(self.root_dir)
+            json_data['get_messages']['from_date'] = datetime.datetime.now().strftime('%Y/%m/%d')
+            app_shared_service.write_conf(self.root_dir, const.SETTINGS_FILENAME, json_data)
 
-    def _search_folder(self, conn, folder, folder_id, oldest, latest):
+
+    def _search_folder(self, conn, folder, folder_id, folder_type, oldest, latest):
         """
         Outlookメールを取得し登録する
 
@@ -66,6 +74,7 @@ class GetMessages:
             conn:
             folder:
             folder_id:
+            folder_type:
             oldest:
             latest:
 
@@ -76,15 +85,22 @@ class GetMessages:
 
         messages = folder.Items
         # フィルタ
-        restriction = "[ReceivedTime] >= '" + oldest + "' AND [ReceivedTime] <= '" + latest + "'"
+        if app_shared_service.is_inbox(folder_type):
+            restriction = "[ReceivedTime] >= '" + oldest + "' AND [ReceivedTime] <= '" + latest + "'"
+        else:
+            restriction = "[SentOn] >= '" + oldest + "' AND [SentOn] <= '" + latest + "'"
         filtered_items = messages.Restrict(restriction)
 
         try:
             store_id = _get_store_id_from_folder(folder)
             for mail in filtered_items:
-                # print(mail.ReceivedTime)
-                received = mail.ReceivedTime.strftime('%Y-%m-%d %H:%M:%S')
-                # print(received)
+                if mail.Class != 43:
+                    continue
+
+                if app_shared_service.is_inbox(folder_type):
+                    received = mail.ReceivedTime.strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    received = mail.SentOn.strftime('%Y-%m-%d %H:%M:%S')
                 org = _get_mail_messages_by_pk(conn, mail.EntryID, store_id)
 
                 if org is None:
@@ -160,6 +176,7 @@ def _get_from_email(mail):
         display_name = mail.sendername
         return email_address, display_name
 
+
 def _get_recipients_email(recipient):
     """
     To、CCのメールアドレスを取得
@@ -228,7 +245,6 @@ def _get_store_id_from_folder(folder):
         return None
 
 
-
 def _get_target_folders(conn):
     """
     取得対象フォルダを取得
@@ -240,8 +256,11 @@ def _get_target_folders(conn):
 
     """
     dataaccess = TargetFolderDataAccess(conn)
-    cond = [Condition('is_target', 1)]
-    return [{'folder_id': r.folder_id, 'folder_path': r.folder_path} for r in dataaccess.select(conditions=cond)]
+    cond = [
+        Condition('is_target', 1),
+    ]
+    return dataaccess.select(conditions=cond)
+
 
 def _get_mail_messages_by_pk(conn, entry_id, store_id):
     """

@@ -36,10 +36,11 @@ def get_sender_list(conn):
     return sender_list
 
 
-def get_folder_list(conn):
+def get_folder_list(conn, folder_type):
 
     dataaccess = TargetFolderDataAccess(conn)
     cond = [
+        Condition('folder_type', folder_type),
         Condition('is_target', 1)
     ]
     sort = [
@@ -69,6 +70,20 @@ def search(conn, model: MailSearchModel):
     Returns:
 
     """
+
+    # 差出人リストをマージ
+    if model.sender_input_list:
+        if model.sender_list:
+            model.sender_list.extend(model.sender_input_list)
+        else:
+            model.sender_list = model.sender_input_list
+
+    # フォルダーリストをマージ
+    if model.sent_folder_list:
+        if model.folder_list:
+            model.folder_list.extend(model.sent_folder_list)
+        else:
+            model.folder_list = model.sent_folder_list
 
     # 検索
     dataaccess = SearchDataaccess(conn)

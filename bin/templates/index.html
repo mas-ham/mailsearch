@@ -31,6 +31,16 @@
                 return false;
             });
 
+            $('#sent_all_sel').click(function() {
+                $('input[name^="sent_folder_list"]').prop('checked', true);
+                return false;
+            });
+
+            $('#sent_all_desel').click(function() {
+                $('input[name^="sent_folder_list"]').prop('checked', false);
+                return false;
+            });
+
        });
 
     </script>
@@ -45,7 +55,7 @@
                     {{ form.search_val.label }}
                 </th>
                 <td>
-                    {{ form.search_val }}
+                    {{ form.search_val(style="width: 400px;") }}
                     &nbsp;
                     {% for search_type in form.search_type %}
                         {{ search_type }}
@@ -69,13 +79,32 @@
                 </td>
             </tr>
             <tr>
+                <th>
+                    受信ボックス<br>
+                    <button id="folder_all_sel">全選択</button>
+                    <button id="folder_all_desel">全解除</button>
+                </th>
+                <td>
+                    <div class="checkbox-grid">
+                        {% for folder in form.folder_list %}
+                            <div class="checkbox-item">
+                                <label class="checkbox-label">
+                                    {{ folder.checked(value=folder.item_id.data) }} <span>{{ folder.label.data }}</span>
+                                    {{ folder.item_id() }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            <tr>
                 <th rowspan="2">
                     差出人<br>
                     <button id="sender_all_sel">全選択</button>
                     <button id="sender_all_desel">全解除</button>
                 </th>
                 <td>
-                    {{ form.sender_input }}&nbsp;「;」区切りで複数指定可能
+                    {{ form.sender_input(style="width: 400px;") }}&nbsp;「;」区切りで複数指定可能
                 </td>
             </tr>
             <tr>
@@ -92,28 +121,15 @@
                     </div>
                 </td>
             </tr>
-            <!--
-            <tr>
-                <th width="150px">
-                    検索場所
-                </th>
-                <td>
-                    {{ form.is_target_receive }}
-                    {{ form.is_target_receive.label }}
-                    {{ form.is_target_send }}
-                    {{ form.is_target_send.label }}
-                </td>
-            </tr>
-            -->
             <tr>
                 <th>
-                    受信ボックス<br>
-                    <button id="folder_all_sel">全選択</button>
-                    <button id="folder_all_desel">全解除</button>
+                    送信ボックス<br>
+                    <button id="sent_all_sel">全選択</button>
+                    <button id="sent_all_desel">全解除</button>
                 </th>
                 <td>
                     <div class="checkbox-grid">
-                        {% for folder in form.folder_list %}
+                        {% for folder in form.sent_folder_list %}
                             <div class="checkbox-item">
                                 <label class="checkbox-label">
                                     {{ folder.checked(value=folder.item_id.data) }} <span>{{ folder.label.data }}</span>

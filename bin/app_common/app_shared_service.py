@@ -153,3 +153,16 @@ def extract_domain(email):
     at_index = email.index('@')
     domain = email[at_index + 1:]
     return domain
+
+
+def is_inbox(folder_type) -> bool:
+    """
+    受信ボックスかどうか
+
+    Args:
+        folder_type:
+
+    Returns:
+
+    """
+    return folder_type != const.SENT_BOX

@@ -266,6 +266,7 @@ def start_log(logger: logger.Logger, program_id='', is_print=False):
         is_print:
 
     """
+    # noinspection PyBroadException
     try:
         if logger is None:
             return
@@ -286,6 +287,7 @@ def end_log(logger: logger.Logger, program_id='', is_print=False):
         is_print:
 
     """
+    # noinspection PyBroadException
     try:
         if logger is None:
             return
