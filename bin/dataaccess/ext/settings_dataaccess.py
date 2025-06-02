@@ -65,8 +65,12 @@ class SettingsDataaccess:
         """
         self.conn.row_factory = sqlite3.Row
         cursor = self.conn.cursor()
-        cursor.execute(SQL_GET_SENDER_LIST)
-        return cursor.fetchall()
+        try:
+            cursor.execute(SQL_GET_SENDER_LIST)
+            results = cursor.fetchall()
+        finally:
+            cursor.close()
+        return results
 
 
     def get_sender_name(self, email_address) -> str:
@@ -81,7 +85,9 @@ class SettingsDataaccess:
         """
         self.conn.row_factory = sqlite3.Row
         cursor = self.conn.cursor()
-        cursor.execute(SQL_GET_SENDER_NAME, params=[email_address])
-        result =  cursor.fetchone()
-
+        try:
+            cursor.execute(SQL_GET_SENDER_NAME, [email_address])
+            result =  cursor.fetchone()
+        finally:
+            cursor.close()
         return result['sender_name'] if result is not None else ''

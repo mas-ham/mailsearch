@@ -4,8 +4,10 @@ SQL共通サービス
 create 2023/11/01 TIS hamada
 """
 import os
+import re
 import sqlite3
 
+from common import shared_service
 
 def get_connection(root_dir):
     """
@@ -67,4 +69,30 @@ def null_to_empty(val):
         return ''
     return val
 
+
+def write_sql_log(sql, *args):
+    """
+    SQLログ出力
+
+    Args:
+        sql:
+        *args:
+
+    Returns:
+
+    """
+    def clean_string(s):
+        # 改行を半角スペースに置換
+        s = s.replace('\n', ' ').replace('\r', ' ')
+        # 複数の半角スペースを1つにまとめる
+        s = re.sub(r' +', ' ', s)
+        # 先頭・末尾の空白を除去
+        return s.strip()
+
+    try:
+        logger = shared_service.set_sql_logger()
+        logger.write_sql_log('', clean_string(sql), *args)
+    except Exception as e:
+        print(e)
+        pass
 

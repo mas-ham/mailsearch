@@ -217,7 +217,7 @@ def _convert_search_model(form: MailSearchForm) -> models.MailSearchModel:
     """
     return models.MailSearchModel(
         form.search_val.data,
-        re.split(r'[ 　]+', form.search_val.data) if form.search_val.data else [],
+        re.split(r'[ 　]+', form.search_val.data.strip()) if form.search_val.data else [],
         form.search_type.data,
         form.is_target_title.data,
         form.is_target_body.data,
@@ -246,7 +246,7 @@ def _convert_detail_model(form: MailSearchResultForm) -> models.MailDetailModel:
         form.entry_id.data,
         form.store_id.data,
         form.search_val.data,
-        re.split(r'[ 　]+', form.search_val.data) if form.search_val.data else [],
+        re.split(r'[ 　]+', form.search_val.data.strip()) if form.search_val.data else [],
     )
 
 

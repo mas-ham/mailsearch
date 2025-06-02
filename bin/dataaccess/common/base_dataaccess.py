@@ -97,8 +97,12 @@ class BaseDataAccess:
         if IS_EXPORT_SQL_LOG:
             _write_sql_log(query, params)
         cursor = self.conn.cursor()
-        cursor.execute(query, params)
-        return cursor.fetchall()
+        try:
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+        finally:
+            cursor.close()
+        return results
 
 
     def execute_select_by_pk(self, table_id, **kwargs):
@@ -121,8 +125,12 @@ class BaseDataAccess:
         if IS_EXPORT_SQL_LOG:
             _write_sql_log(query, params)
         cursor = self.conn.cursor()
-        cursor.execute(query, params)
-        return cursor.fetchone()
+        try:
+            cursor.execute(query, params)
+            result = cursor.fetchone()
+        finally:
+            cursor.close()
+        return result
 
 
     def execute_select_all(self, table_id, order_by_list: list):
@@ -140,8 +148,12 @@ class BaseDataAccess:
         if IS_EXPORT_SQL_LOG:
             _write_sql_log(query)
         cursor = self.conn.cursor()
-        cursor.execute(query)
-        return cursor.fetchall()
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+        finally:
+            cursor.close()
+        return results
 
 
     def execute_insert(self, table_id, column_id_list, params):
@@ -158,12 +170,12 @@ class BaseDataAccess:
         """
         place_holder_list = ['?' for _ in range(len(column_id_list))]
         query = SQL_INSERT.format(table_id, ",".join(column_id_list), ",".join(place_holder_list))
-        if IS_EXPORT_SQL_LOG:
-            _write_sql_log(query, *params)
+        # if IS_EXPORT_SQL_LOG:
+        #     _write_sql_log(query, *params)
 
-        cur = self.conn.cursor()
-        cur.execute(query, params)
-        cur.close()
+        cursor = self.conn.cursor()
+        cursor.execute(query, params)
+        cursor.close()
 
         return self._get_last_id()
 
@@ -182,17 +194,17 @@ class BaseDataAccess:
         """
         place_holder_list = ['?' for _ in range(len(column_id_list))]
         query = SQL_INSERT.format(table_id, ",".join(column_id_list), ",".join(place_holder_list))
-        if IS_EXPORT_SQL_LOG:
-            _write_sql_log(query, *params)
+        # if IS_EXPORT_SQL_LOG:
+        #     _write_sql_log(query, *params)
 
-        cur = self.conn.cursor()
+        cursor = self.conn.cursor()
         # パラメーター数に上限があるため分割して実行
         batch_size = get_max_safe_batch_size(len(column_id_list))
         for i in range(0, len(params), batch_size):
             batch = params[i:i + batch_size]
-            cur.executemany(query, batch)
+            cursor.executemany(query, batch)
         # cur.executemany(query, params)
-        cur.close()
+        cursor.close()
 
 
     def execute_update(self, table_id, update_info, **kwargs):
@@ -218,12 +230,12 @@ class BaseDataAccess:
             params.append(val)
 
         query = SQL_UPDATE.format(table_id, ",".join(update_key_list), " AND ".join(where_list))
-        if IS_EXPORT_SQL_LOG:
-            _write_sql_log(query, params)
+        # if IS_EXPORT_SQL_LOG:
+        #     _write_sql_log(query, params)
 
-        cur = self.conn.cursor()
-        cur.execute(query, tuple(params))
-        cur.close()
+        cursor = self.conn.cursor()
+        cursor.execute(query, tuple(params))
+        cursor.close()
 
 
 
@@ -245,9 +257,9 @@ class BaseDataAccess:
         if IS_EXPORT_SQL_LOG:
             _write_sql_log(query, *kwargs.values())
 
-        cur = self.conn.cursor()
-        cur.execute(query, tuple(kwargs.values()))
-        cur.close()
+        cursor = self.conn.cursor()
+        cursor.execute(query, tuple(kwargs.values()))
+        cursor.close()
 
 
     def execute_delete_all(self, table_id):
@@ -264,9 +276,9 @@ class BaseDataAccess:
         if IS_EXPORT_SQL_LOG:
             _write_sql_log(query)
 
-        cur = self.conn.cursor()
-        cur.execute(query)
-        cur.close()
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        cursor.close()
 
 
     def _get_last_id(self):
@@ -276,10 +288,10 @@ class BaseDataAccess:
         Returns:
 
         """
-        cur = self.conn.cursor()
-        cur.execute(SQL_GET_LAST_ID)
-        __last_id = cur.fetchone()[0]
-        cur.close()
+        cursor = self.conn.cursor()
+        cursor.execute(SQL_GET_LAST_ID)
+        __last_id = cursor.fetchone()[0]
+        cursor.close()
         return __last_id
 
 

@@ -8,25 +8,13 @@ import dataclasses
 
 @dataclasses.dataclass
 class TrMailMessages:
-    entry_id = None
-    store_id = None
-    received = None
-    sender = None
-    sender_name = None
-    to_email = None
-    cc_email = None
-    subject = None
-    body = None
-    folder_id = None
-
-    def __init__(self, entry_id = None, store_id = None, received = None, sender = None, sender_name = None, to_email = None, cc_email = None, subject = None, body = None, folder_id = None):
-        self.entry_id = entry_id
-        self.store_id = store_id
-        self.received = received
-        self.sender = sender
-        self.sender_name = sender_name
-        self.to_email = to_email
-        self.cc_email = cc_email
-        self.subject = subject
-        self.body = body
-        self.folder_id = folder_id
+    entry_id: str = None
+    store_id: str = None
+    received: str = None
+    sender: str = None
+    sender_name: str = None
+    to_email: str = None
+    cc_email: str = None
+    subject: str = None
+    body: str = None
+    folder_id: int = None

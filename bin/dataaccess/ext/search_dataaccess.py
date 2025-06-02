@@ -4,6 +4,7 @@
 """
 import sqlite3
 
+from common import sql_shared_service
 from app_common import app_shared_service
 from mailsearch.models import MailSearchModel
 
@@ -39,6 +40,7 @@ SQL_SEARCH = (
 class SearchDataaccess:
     def __init__(self, conn):
         self.conn = conn
+        self.conn.row_factory = sqlite3.Row
 
     def search(self, model: MailSearchModel):
         """
@@ -52,8 +54,10 @@ class SearchDataaccess:
         # SQLの組み立て
         sql, params = _create_sql_for_search(model)
 
+        # ログ
+        sql_shared_service.write_sql_log(sql, params)
+
         # 実行
-        self.conn.row_factory = sqlite3.Row
         cursor = self.conn.cursor()
         cursor.execute(sql, params)
         return cursor.fetchall()
@@ -73,8 +77,10 @@ class SearchDataaccess:
         # SQLの組み立て
         sql, params = _create_sql_for_detail(entry_id, store_id)
 
+        # ログ
+        sql_shared_service.write_sql_log(sql, params)
+
         # 実行
-        self.conn.row_factory = sqlite3.Row
         cursor = self.conn.cursor()
         cursor.execute(sql, params)
         return cursor.fetchone()

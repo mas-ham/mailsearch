@@ -10,6 +10,20 @@ from common import sql_shared_service
 
 AUTHOR = 'hamada'
 
+# 型マッピング
+SQLITE_TO_PYTHON = {
+    'TEXT': 'str',
+    'INTEGER': 'int',
+    'REAL': 'float',
+    'BLOB': 'bytes',
+}
+
+def map_sqlite_type(sqlite_type):
+    for key in SQLITE_TO_PYTHON:
+        if key in sqlite_type.upper():
+            return SQLITE_TO_PYTHON[key]
+    return 'Any'
+
 def generate(root_dir, bin_dir, table_list):
 
     with sql_shared_service.get_connection(root_dir) as conn:
@@ -24,6 +38,7 @@ def generate(root_dir, bin_dir, table_list):
             column_list = list()
             pk_list = list()
             all_list = list()
+            type_list = list()
             records = cur.fetchall()
 
             if len(records) == 0:
@@ -45,14 +60,18 @@ def generate(root_dir, bin_dir, table_list):
                 # all_list
                 all_list.append(row[1])
 
-            _create_entity(bin_dir, table_id, column_list, pk_list, all_list)
+                # type_list
+                type_list.append(map_sqlite_type(row[2]))
+
+            _create_entity(bin_dir, table_id, all_list, type_list)
             _create_dataaccess(bin_dir, table_id, column_list, pk_list, all_list)
 
+        cur.close()
 
-def _create_entity(root_dir, table_id, column_list, pk_list, all_list):
+
+def _create_entity(root_dir, table_id, all_list, type_list):
     camel_table_id = _convert_camel(table_id)
     date = datetime.datetime.now().strftime('%Y/%m/%d')
-    joined_col_list = ', '.join([f'{s} = None' for s in all_list])
     s = list()
     s.append(f'"""')
     s.append(f'Entity：{table_id}')
@@ -60,16 +79,14 @@ def _create_entity(root_dir, table_id, column_list, pk_list, all_list):
     s.append(f'create {date} {AUTHOR}')
     s.append(f'"""')
     s.append(f'import dataclasses')
+    if 'Any' in type_list:
+        s.append(f'from typing import Any')
     s.append(f'')
     s.append(f'')
     s.append(f'@dataclasses.dataclass')
     s.append(f'class {camel_table_id}:')
-    for column_id in all_list:
-        s.append(f'    {column_id} = None')
-    s.append(f'')
-    s.append(f'    def __init__(self, {joined_col_list}):')
-    for column_id in all_list:
-        s.append(f'        self.{column_id} = {column_id}')
+    for column_id, sqlite_type in zip(all_list, type_list):
+        s.append(f'    {column_id}: {sqlite_type} = None')
     s.append(f'')
 
     export_dir = os.path.join(root_dir, 'dataaccess', 'entity')
@@ -258,7 +275,7 @@ def _create_dataaccess_select_all(table_id, column_list, pk_list, all_list):
     s.append(f'')
     s.append(f'        """')
     s.append(f'        results = self.execute_select_all(TABLE_ID, order_by_list)')
-    s.append(f'        if results.empty:')
+    s.append(f'        if not results:')
     s.append(f'            return []')
     s.append(f'        return [{camel_table_id}({", ".join(row_list)}) for row in results]')
     s.append(f'')

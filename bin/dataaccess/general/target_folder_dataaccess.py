@@ -65,7 +65,7 @@ class TargetFolderDataAccess(BaseDataAccess):
 
         """
         results = self.execute_select_all(TABLE_ID, order_by_list)
-        if results.empty:
+        if not results:
             return []
         return [TargetFolder(row['folder_id'], row['folder_path'], row['folder_type'], row['is_target']) for row in results]
 

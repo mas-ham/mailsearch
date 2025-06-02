@@ -67,7 +67,7 @@ class TargetSenderDataAccess(BaseDataAccess):
 
         """
         results = self.execute_select_all(TABLE_ID, order_by_list)
-        if results.empty:
+        if not results:
             return []
         return [TargetSender(row['sender_id'], row['email_address'], row['display_name'], row['is_display'], row['is_checked']) for row in results]
 

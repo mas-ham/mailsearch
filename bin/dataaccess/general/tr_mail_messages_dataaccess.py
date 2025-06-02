@@ -73,7 +73,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
 
         """
         results = self.execute_select_all(TABLE_ID, order_by_list)
-        if results.empty:
+        if not results:
             return []
         return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['sender_name'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for row in results]
 

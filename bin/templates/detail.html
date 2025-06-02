@@ -66,9 +66,7 @@
                 <button id="copyToEmail" onclick="javascript: copyToEmail()" >コピー</button>
             </th>
             <td>
-                <div id="toEmail">
-                    {{ form.to_email.data }}
-                </div>
+                <div id="toEmail" style="white-space:pre-wrap; word-break:break-all">{{ form.to_email.data }}</div>
             </td>
         </tr>
         <tr>
@@ -77,9 +75,7 @@
                 <button id="copyCcEmail" onclick="javascript: copyCcEmail()" >コピー</button>
             </th>
             <td>
-                <div id="ccEmail">
-                    {{ form.cc_email.data }}
-                </div>
+                <div id="ccEmail" style="white-space:pre-wrap; word-break:break-all">{{ form.cc_email.data }}</div>
             </td>
         </tr>
         <tr>

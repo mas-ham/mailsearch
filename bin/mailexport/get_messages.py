@@ -15,8 +15,8 @@ from app_common import app_shared_service
 from dataaccess.common.set_cond_model import Condition
 from dataaccess.general.target_folder_dataaccess import TargetFolderDataAccess
 from dataaccess.general.tr_mail_messages_dataaccess import TrMailMessagesDataAccess
+from dataaccess.ext.export_dataaccess import ExportDataaccess
 from dataaccess.entity.tr_mail_messages import TrMailMessages
-
 
 
 class GetMessages:
@@ -46,6 +46,9 @@ class GetMessages:
         with sql_shared_service.get_connection(self.root_dir) as conn:
             target_folders = _get_target_folders(conn)
 
+            # トランザクションを開始
+            conn.execute('BEGIN TRANSACTION')
+
             for target_folder in target_folders:
                 folder_type = target_folder.folder_type
                 # フォルダを特定
@@ -60,7 +63,7 @@ class GetMessages:
 
         # 設定ファイル更新
         # from_dateを当日に更新する
-        if int(self.conf['is_get_messages']) and int(self.conf['is_overwrite_from_date']):
+        if int(self.conf['is_overwrite_from_date']):
             json_data = app_shared_service.get_conf(self.root_dir)
             json_data['get_messages']['from_date'] = datetime.datetime.now().strftime('%Y/%m/%d')
             app_shared_service.write_conf(self.root_dir, const.SETTINGS_FILENAME, json_data)
@@ -101,25 +104,25 @@ class GetMessages:
                     received = mail.ReceivedTime.strftime('%Y-%m-%d %H:%M:%S')
                 else:
                     received = mail.SentOn.strftime('%Y-%m-%d %H:%M:%S')
-                org = _get_mail_messages_by_pk(conn, mail.EntryID, store_id)
 
-                if org is None:
-                    from_email_address, from_display_name = _get_from_email(mail)
-                    to_list, cc_list = _get_recipients_addresses(mail)
-                    # Insert
-                    entity = TrMailMessages()
-                    entity.entry_id = mail.EntryID
-                    entity.store_id = store_id
-                    entity.received = received
-                    entity.sender = from_email_address
-                    entity.sender_name = from_display_name.strip()
-                    entity.to_email = ';'.join(to_list)
-                    entity.cc_email = ';'.join(cc_list)
-                    entity.subject = mail.Subject
-                    entity.body = mail.Body
-                    entity.folder_id = folder_id
+                from_email_address, from_display_name = _get_from_email(mail)
+                to_list, cc_list = _get_recipients_addresses(mail)
+                # Create Entity
+                entity = TrMailMessages()
+                entity.entry_id = mail.EntryID
+                entity.store_id = store_id
+                entity.received = received
+                entity.sender = from_email_address
+                entity.sender_name = from_display_name.strip()
+                entity.to_email = ';'.join(to_list)
+                entity.cc_email = ';'.join(cc_list)
+                entity.subject = mail.Subject
+                entity.body = mail.Body
+                entity.folder_id = folder_id
+                # Upsert
+                dataaccess = ExportDataaccess(conn)
+                dataaccess.upsert_mail_messages(entity)
 
-                    _insert_mail_messages(conn, entity)
 
         except Exception as e:
             # アイテムアクセス不可でも無視
@@ -190,15 +193,24 @@ def _get_recipients_email(recipient):
     try:
         address_entry = recipient.AddressEntry
         if address_entry.Type == "EX":  # Exchangeのアドレス
+            # Exchangeユーザー
             exchange_user = address_entry.GetExchangeUser()
             if exchange_user:
-                return exchange_user.PrimarySmtpAddress
+                return exchange_user.PrimarySmtpAddress if exchange_user.PrimarySmtpAddress == address_entry.Name else f'{address_entry.Name}<{exchange_user.PrimarySmtpAddress}>'
+            else:
+                # 配布リスト
+                exchange_dist_list = address_entry.GetExchangeDistributionList()
+                if exchange_dist_list is not None:
+                    # SMTPアドレスが未割当の場合は表示名を返却
+                    return exchange_dist_list.PrimarySmtpAddress if exchange_dist_list.PrimarySmtpAddress else address_entry.Name
         else:
             # 通常のSMTPアドレス
             return recipient.Address
     except Exception as e:
         shared_service.print_except(e)
         return ''
+
+    return recipient.Address
 
 
 def _get_recipients_addresses(mail):
@@ -277,17 +289,3 @@ def _get_mail_messages_by_pk(conn, entry_id, store_id):
     dataaccess = TrMailMessagesDataAccess(conn)
     return dataaccess.select_by_pk(entry_id, store_id)
 
-
-def _insert_mail_messages(conn, entity: TrMailMessages):
-    """
-    メッセージ登録
-
-    Args:
-        conn:
-        entity:
-
-    Returns:
-
-    """
-    dataaccess = TrMailMessagesDataAccess(conn)
-    dataaccess.insert(entity)

@@ -98,6 +98,25 @@
                 </td>
             </tr>
             <tr>
+                <th>
+                    送信ボックス<br>
+                    <button id="sent_all_sel">全選択</button>
+                    <button id="sent_all_desel">全解除</button>
+                </th>
+                <td>
+                    <div class="checkbox-grid">
+                        {% for folder in form.sent_folder_list %}
+                            <div class="checkbox-item">
+                                <label class="checkbox-label">
+                                    {{ folder.checked(value=folder.item_id.data) }} <span>{{ folder.label.data }}</span>
+                                    {{ folder.item_id() }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            <tr>
                 <th rowspan="2">
                     差出人<br>
                     <button id="sender_all_sel">全選択</button>
@@ -115,25 +134,6 @@
                                 <label class="checkbox-label">
                                     {{ sender.checked(value=sender.item_id.data) }} <span>{{ sender.label.data }}</span>
                                     {{ sender.item_id() }}
-                                </label>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    送信ボックス<br>
-                    <button id="sent_all_sel">全選択</button>
-                    <button id="sent_all_desel">全解除</button>
-                </th>
-                <td>
-                    <div class="checkbox-grid">
-                        {% for folder in form.sent_folder_list %}
-                            <div class="checkbox-item">
-                                <label class="checkbox-label">
-                                    {{ folder.checked(value=folder.item_id.data) }} <span>{{ folder.label.data }}</span>
-                                    {{ folder.item_id() }}
                                 </label>
                             </div>
                         {% endfor %}
