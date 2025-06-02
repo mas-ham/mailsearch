@@ -1,0 +1,101 @@
+<!--
+    メール検索：詳細画面
+-->
+<!DOCTYPE html>
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<head>
+    <title>Detail</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mailsearch.css') }}" type="text/css">
+
+    <script>
+        $(function(){
+        });
+
+        function saveClipboard(val) {
+            // クリップボードAPIを使用してコピー
+            navigator.clipboard.writeText(val.trim()).then(function() {
+            }).catch(function(error) {
+                console.error('コピーに失敗しました:', error);
+            });
+        }
+        function copySender() {
+            saveClipboard($('#sender').text())
+        }
+        function copyToEmail() {
+            saveClipboard($('#toEmail').text())
+        }
+        function copyCcEmail() {
+            saveClipboard($('#ccEmail').text())
+        }
+        function copySubject() {
+            saveClipboard($('#subject').text())
+
+        }
+        function copyBody() {
+            saveClipboard($('#body').text())
+        }
+    </script>
+</head>
+<body>
+    {{ form.hidden_tag() }}
+    <h1>詳細</h1>
+    <table width="98%">
+        <tr>
+            <th width="10%">
+                {{ form.received.label }}
+            </th>
+            <td width="90%">
+                {{ form.received.data }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                {{ form.sender.label }}
+                <button id="copySender" onclick="javascript: copySender()" >コピー</button>
+            </th>
+            <td>
+                <div id="sender">
+                    {{ form.sender.data }}
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                {{ form.to_email.label }}
+                <button id="copyToEmail" onclick="javascript: copyToEmail()" >コピー</button>
+            </th>
+            <td>
+                <div id="toEmail" style="white-space:pre-wrap; word-break:break-all">{{ form.to_email.data }}</div>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                {{ form.cc_email.label }}
+                <button id="copyCcEmail" onclick="javascript: copyCcEmail()" >コピー</button>
+            </th>
+            <td>
+                <div id="ccEmail" style="white-space:pre-wrap; word-break:break-all">{{ form.cc_email.data }}</div>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                {{ form.subject.label }}
+                <button id="copySubject" onclick="javascript: copySubject()" >コピー</button>
+            </th>
+            <td>
+                <div style="white-space:pre-wrap; word-break:break-all" id="subject">{{ form.subject.data|safe }}</div>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                {{ form.body.label }}
+                <button id="copyBody" onclick="javascript: copyBody()" >コピー</button>
+            </th>
+            <td>
+                <div style="white-space:pre-wrap; word-break:break-all" id="body">{{ form.body.data|safe }}</div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

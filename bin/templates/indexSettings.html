@@ -1,0 +1,94 @@
+<!--
+    メール検索：設定画面
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Mail Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mailsearch.css') }}" type="text/css">
+
+    <script>
+        $(function(){
+        });
+
+    </script>
+</head>
+<body>
+    <form id="form" name="form" action="/registSettings" method="POST">
+        {{ form.hidden_tag() }}
+        <h1>メール検索設定</h1>
+        <h2>取込み対象フォルダ</h2>
+        <table border="1">
+            <tr>
+                <th width="30px">
+                    対象
+                </th>
+                <th width="800px">
+                    フォルダー
+                </th>
+            </tr>
+            {% for record in folder_list %}
+                <tr>
+                    <td>
+                        <input type="checkbox" id="is_target_{{ record.folder_id }}" name="is_target" value="{{ record.folder_id }}" {{ record.checked }} />
+                    </td>
+                    <td>
+                        {{ record.folder_path }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <h2>差出人</h2>
+        <table border="1">
+            <tr>
+                <th width="30px">
+                    表示
+                </th>
+                <th width="30px">
+                    初期値
+                </th>
+                <th width="100px">
+                    domain
+                </th>
+                <th width="300px">
+                    email_address
+                </th>
+                <th width="600px">
+                    display_name
+                </th>
+            </tr>
+            {% for record in sender_list %}
+                <tr>
+                    <td>
+                        <input type="checkbox" name="is_sender_display" value="{{ record.email_address }}" {{ record.is_display }} />
+                    </td>
+                    <td>
+                        <input type="checkbox" name="is_sender_checked" value="{{ record.email_address }}" {{ record.is_checked }} />
+                    </td>
+                    <td>
+                        {{ record.domain }}
+                    </td>
+                    <td>
+                        {{ record.email_address }}
+                    </td>
+                    <td>
+                        {{ record.display_name }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <table>
+            <tr>
+                <td>
+                    {{ form.regist_button }}
+                </td>
+            </tr>
+        </table>
+        <br>
+    </form>
+</body>
+</html>
