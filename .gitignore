@@ -7,5 +7,6 @@ bin/result/*.json
 bin/result/*.tsv
 bin/result/*.txt
 tsv/**/*.tsv
+dataaccess_generator.bat
 *__pycache__*
 !.gitkeep

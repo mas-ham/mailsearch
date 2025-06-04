@@ -1,10 +1,9 @@
 """
 Entity：tr_mail_messages
 
-create 2025/06/02 hamada
+create 2025/06/04 13:31:05 generator
 """
 import dataclasses
-
 
 @dataclasses.dataclass
 class TrMailMessages:

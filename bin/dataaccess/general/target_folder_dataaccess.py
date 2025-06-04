@@ -1,7 +1,7 @@
 """
 dataaccess：target_folder
 
-create 2025/06/02 hamada
+create 2025/06/04 13:31:05 generator
 """
 from dataaccess.common.base_dataaccess import BaseDataAccess
 from dataaccess.entity.target_folder import TargetFolder
@@ -35,7 +35,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         results = self.execute_select(TABLE_ID, conditions, order_by_list)
         if not results:
             return []
-        return [TargetFolder(row['folder_id'], row['folder_path'], row['folder_type'], row['is_target']) for row in results]
+        return [TargetFolder(result['folder_id'], result['folder_path'], result['folder_type'], result['is_target']) for result in results]
 
 
     def select_by_pk(self, folder_id) -> TargetFolder | None:
@@ -67,7 +67,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         results = self.execute_select_all(TABLE_ID, order_by_list)
         if not results:
             return []
-        return [TargetFolder(row['folder_id'], row['folder_path'], row['folder_type'], row['is_target']) for row in results]
+        return [TargetFolder(result['folder_id'], result['folder_path'], result['folder_type'], result['is_target']) for result in results]
 
 
     def insert(self, entity: TargetFolder) -> int:
@@ -80,11 +80,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         Returns:
 
         """
-        params = (
-            entity.folder_path,
-            entity.folder_type,
-            entity.is_target,
-        )
+        params = (entity.folder_path, entity.folder_type, entity.is_target)
         return self.execute_insert(TABLE_ID, self.col_list, params)
 
 
@@ -101,11 +97,7 @@ class TargetFolderDataAccess(BaseDataAccess):
         params = []
         for entity in entity_list:
             params.append(
-                (
-                    entity.folder_path,
-                    entity.folder_type,
-                    entity.is_target,
-                )
+                (entity.folder_path, entity.folder_type, entity.is_target)
             )
         self.execute_insert_many(TABLE_ID, self.col_list, params)
 
@@ -197,4 +189,3 @@ class TargetFolderDataAccess(BaseDataAccess):
 
         """
         self.execute_delete_all(TABLE_ID)
-

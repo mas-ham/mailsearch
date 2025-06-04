@@ -1,7 +1,7 @@
 """
 dataaccess：tr_mail_messages
 
-create 2025/06/02 hamada
+create 2025/06/04 13:31:05 generator
 """
 from dataaccess.common.base_dataaccess import BaseDataAccess
 from dataaccess.entity.tr_mail_messages import TrMailMessages
@@ -42,7 +42,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         results = self.execute_select(TABLE_ID, conditions, order_by_list)
         if not results:
             return []
-        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['sender_name'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for row in results]
+        return [TrMailMessages(result['entry_id'], result['store_id'], result['received'], result['sender'], result['sender_name'], result['to_email'], result['cc_email'], result['subject'], result['body'], result['folder_id']) for result in results]
 
 
     def select_by_pk(self, entry_id, store_id) -> TrMailMessages | None:
@@ -75,7 +75,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         results = self.execute_select_all(TABLE_ID, order_by_list)
         if not results:
             return []
-        return [TrMailMessages(row['entry_id'], row['store_id'], row['received'], row['sender'], row['sender_name'], row['to_email'], row['cc_email'], row['subject'], row['body'], row['folder_id']) for row in results]
+        return [TrMailMessages(result['entry_id'], result['store_id'], result['received'], result['sender'], result['sender_name'], result['to_email'], result['cc_email'], result['subject'], result['body'], result['folder_id']) for result in results]
 
 
     def insert(self, entity: TrMailMessages) -> int:
@@ -88,18 +88,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         Returns:
 
         """
-        params = (
-            entity.entry_id,
-            entity.store_id,
-            entity.received,
-            entity.sender,
-            entity.sender_name,
-            entity.to_email,
-            entity.cc_email,
-            entity.subject,
-            entity.body,
-            entity.folder_id,
-        )
+        params = (entity.entry_id, entity.store_id, entity.received, entity.sender, entity.sender_name, entity.to_email, entity.cc_email, entity.subject, entity.body, entity.folder_id)
         return self.execute_insert(TABLE_ID, self.col_list, params)
 
 
@@ -116,18 +105,7 @@ class TrMailMessagesDataAccess(BaseDataAccess):
         params = []
         for entity in entity_list:
             params.append(
-                (
-                    entity.entry_id,
-                    entity.store_id,
-                    entity.received,
-                    entity.sender,
-                    entity.sender_name,
-                    entity.to_email,
-                    entity.cc_email,
-                    entity.subject,
-                    entity.body,
-                    entity.folder_id,
-                )
+                (entity.entry_id, entity.store_id, entity.received, entity.sender, entity.sender_name, entity.to_email, entity.cc_email, entity.subject, entity.body, entity.folder_id)
             )
         self.execute_insert_many(TABLE_ID, self.col_list, params)
 
@@ -255,4 +233,3 @@ class TrMailMessagesDataAccess(BaseDataAccess):
 
         """
         self.execute_delete_all(TABLE_ID)
-

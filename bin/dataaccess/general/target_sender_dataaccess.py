@@ -1,7 +1,7 @@
 """
 dataaccess：target_sender
 
-create 2025/06/02 hamada
+create 2025/06/04 13:31:05 generator
 """
 from dataaccess.common.base_dataaccess import BaseDataAccess
 from dataaccess.entity.target_sender import TargetSender
@@ -37,7 +37,7 @@ class TargetSenderDataAccess(BaseDataAccess):
         results = self.execute_select(TABLE_ID, conditions, order_by_list)
         if not results:
             return []
-        return [TargetSender(row['sender_id'], row['email_address'], row['display_name'], row['is_display'], row['is_checked']) for row in results]
+        return [TargetSender(result['sender_id'], result['email_address'], result['display_name'], result['is_display'], result['is_checked']) for result in results]
 
 
     def select_by_pk(self, sender_id) -> TargetSender | None:
@@ -69,7 +69,7 @@ class TargetSenderDataAccess(BaseDataAccess):
         results = self.execute_select_all(TABLE_ID, order_by_list)
         if not results:
             return []
-        return [TargetSender(row['sender_id'], row['email_address'], row['display_name'], row['is_display'], row['is_checked']) for row in results]
+        return [TargetSender(result['sender_id'], result['email_address'], result['display_name'], result['is_display'], result['is_checked']) for result in results]
 
 
     def insert(self, entity: TargetSender) -> int:
@@ -82,13 +82,7 @@ class TargetSenderDataAccess(BaseDataAccess):
         Returns:
 
         """
-        params = (
-            entity.sender_id,
-            entity.email_address,
-            entity.display_name,
-            entity.is_display,
-            entity.is_checked,
-        )
+        params = (entity.sender_id, entity.email_address, entity.display_name, entity.is_display, entity.is_checked)
         return self.execute_insert(TABLE_ID, self.col_list, params)
 
 
@@ -105,13 +99,7 @@ class TargetSenderDataAccess(BaseDataAccess):
         params = []
         for entity in entity_list:
             params.append(
-                (
-                    entity.sender_id,
-                    entity.email_address,
-                    entity.display_name,
-                    entity.is_display,
-                    entity.is_checked,
-                )
+                (entity.sender_id, entity.email_address, entity.display_name, entity.is_display, entity.is_checked)
             )
         self.execute_insert_many(TABLE_ID, self.col_list, params)
 
@@ -211,4 +199,3 @@ class TargetSenderDataAccess(BaseDataAccess):
 
         """
         self.execute_delete_all(TABLE_ID)
-
