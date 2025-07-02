@@ -171,8 +171,9 @@ def detail():
     detail_form.cc_email.data = result.cc_email
     detail_form.subject.data = result.subject
     detail_form.body.data = result.body
+    copy_icon = url_for('static', filename=f'icon/copy.png')
 
-    return render_template('detail.html', form=detail_form)
+    return render_template('detail.html', form=detail_form, copy_icon=copy_icon)
 
 
 @app.route('/settings')

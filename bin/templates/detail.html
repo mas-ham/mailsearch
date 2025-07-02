@@ -52,7 +52,9 @@
         <tr>
             <th>
                 {{ form.sender.label }}
-                <button id="copySender" onclick="javascript: copySender()" >コピー</button>
+                &nbsp;
+                <img src="{{ copy_icon }}" onclick="javascript: copySender()"/>
+
             </th>
             <td>
                 <div id="sender">
@@ -63,7 +65,8 @@
         <tr>
             <th>
                 {{ form.to_email.label }}
-                <button id="copyToEmail" onclick="javascript: copyToEmail()" >コピー</button>
+                &nbsp;
+                <img src="{{ copy_icon }}" onclick="javascript: copyToEmail()"/>
             </th>
             <td>
                 <div id="toEmail" style="white-space:pre-wrap; word-break:break-all">{{ form.to_email.data }}</div>
@@ -72,7 +75,8 @@
         <tr>
             <th>
                 {{ form.cc_email.label }}
-                <button id="copyCcEmail" onclick="javascript: copyCcEmail()" >コピー</button>
+                &nbsp;
+                <img src="{{ copy_icon }}" onclick="javascript: copyCcEmail()"/>
             </th>
             <td>
                 <div id="ccEmail" style="white-space:pre-wrap; word-break:break-all">{{ form.cc_email.data }}</div>
@@ -81,7 +85,8 @@
         <tr>
             <th>
                 {{ form.subject.label }}
-                <button id="copySubject" onclick="javascript: copySubject()" >コピー</button>
+                &nbsp;
+                <img src="{{ copy_icon }}" onclick="javascript: copySubject()"/>
             </th>
             <td>
                 <div style="white-space:pre-wrap; word-break:break-all" id="subject">{{ form.subject.data|safe }}</div>
@@ -90,7 +95,8 @@
         <tr>
             <th>
                 {{ form.body.label }}
-                <button id="copyBody" onclick="javascript: copyBody()" >コピー</button>
+                &nbsp;
+                <img src="{{ copy_icon }}" onclick="javascript: copyBody()"/>
             </th>
             <td>
                 <div style="white-space:pre-wrap; word-break:break-all" id="body">{{ form.body.data|safe }}</div>
