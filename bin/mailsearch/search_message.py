@@ -6,6 +6,8 @@ create 2025/05/24 hamada
 import re
 
 import bleach
+import pythoncom
+import win32com.client
 
 from mailsearch.models import MailSearchModel, MailDetailModel, MailResultModel
 from dataaccess.ext.search_dataaccess import SearchDataaccess
@@ -145,6 +147,25 @@ def get_detail(conn, model: MailDetailModel) -> MailResultModel:
     result.body = _add_highlights(record['body'], model.search_val_list)
 
     return result
+
+
+def open_mail(entry_id, store_id):
+    """
+    メールを開く
+
+    """
+    # Outlookのアプリケーションを起動
+    pythoncom.CoInitialize()  # type: ignore
+    outlook = win32com.client.Dispatch("Outlook.Application")
+    namespace = outlook.GetNamespace("MAPI")
+
+    # EntryIDとStoreIDからメールアイテムを取得
+    print(f'entry_id is {entry_id}')
+    print(f'store_id is {store_id}')
+    mail_item = namespace.GetItemFromID(entry_id, store_id)
+
+    # メールアイテムをウィンドウで開く（インスペクターで表示）
+    mail_item.Display()
 
 
 def _add_highlights(val, target_vals):

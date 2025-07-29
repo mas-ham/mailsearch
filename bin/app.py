@@ -1,7 +1,7 @@
 import os
 import re
 
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, jsonify
 from flask_wtf import FlaskForm
 from wtforms import Form, StringField, TextAreaField, DateField, RadioField, BooleanField, FieldList, FormField, HiddenField, SubmitField
 
@@ -73,6 +73,8 @@ class MailSearchDetailForm(FlaskForm):
     cc_email = StringField('CC')
     subject = StringField('件名')
     body = TextAreaField('本文')
+    entry_id = HiddenField()
+    store_id = HiddenField()
 
 
 class SettingsForm(FlaskForm):
@@ -174,6 +176,20 @@ def detail():
     copy_icon = url_for('static', filename=f'icon/copy.png')
 
     return render_template('detail.html', form=detail_form, copy_icon=copy_icon)
+
+
+@app.route('/openMail', methods=['POST'])
+def open_mail():
+    """
+    メールを開く
+
+    Returns:
+
+    """
+    data = request.get_json()
+    search_message.open_mail(data.get('entry_id'), data.get('store_id'))
+
+    return jsonify({'result': ''})
 
 
 @app.route('/settings')

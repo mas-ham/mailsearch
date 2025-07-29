@@ -12,6 +12,19 @@
         $(function(){
         });
 
+        // メールを開く
+        function openMail() {
+            $.ajax({
+                url: '/openMail',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({'entry_id': $('#entry_id').val(), 'store_id': $('#store_id').val()}),
+                success: function(response) {
+//                    alert(response.message);
+                }
+            });
+        }
+
         function saveClipboard(val) {
             // クリップボードAPIを使用してコピー
             navigator.clipboard.writeText(val.trim()).then(function() {
@@ -40,6 +53,13 @@
 <body>
     {{ form.hidden_tag() }}
     <h1>詳細</h1>
+    <table>
+        <tr>
+            <td>
+                <button onclick="javascript: openMail()" style="width: 8em; height: 3em">メールを開く</button>
+            </td>
+        </tr>
+    </table>
     <table width="98%">
         <tr>
             <th width="10%">
